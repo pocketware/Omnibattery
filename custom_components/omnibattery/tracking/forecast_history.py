@@ -86,6 +86,20 @@ SERIES_METRICS = (*ENERGY_METRICS, "soc")
 
 _ACTION_GRID_CHARGE = 2
 
+# Second, evaluation-only consumption series: the heat pump shadow forecast.
+# Kept under its own key in a day record, so the existing sources, series and
+# exports are untouched. ``day_ahead`` is the last capture before the day
+# began, ``start_of_day`` the first one on the day itself.
+SHADOW_CONSUMPTION_KEY = "shadow_consumption"
+_SHADOW_FIELDS = (
+    "source",
+    "fallback_reason",
+    "shadow_kwh",
+    "current_kwh",
+    "base_kwh",
+    "heat_pump_kwh",
+)
+
 # Planner scalars copied into intraday revisions (``_last_decision_data``).
 _DECISION_FIELDS = {
     "energy_deficit_kwh": "deficit",
@@ -657,6 +671,73 @@ class ForecastHistoryManager:
         revisions.sort(key=lambda item: str(item.get("t", "")))
         return True
 
+    def record_shadow_consumption(
+        self,
+        local_date: date,
+        *,
+        shadow: Mapping[str, Any],
+        captured_at: datetime,
+    ) -> bool:
+        """Record the heat pump shadow consumption forecast for one day.
+
+        Evaluation only. Stored under its own key, so existing records,
+        summaries and exports are unchanged.
+        """
+        if not isinstance(shadow, Mapping):
+            return False
+        series = _series(shadow.get("intervals_kwh"))
+        if not any(value is not None for value in series):
+            return False
+        if captured_at.date() < local_date:
+            kind = SOURCE_DAY_AHEAD
+        elif captured_at.date() == local_date:
+            kind = SOURCE_START_OF_DAY
+        else:
+            return False
+        record = self._day(local_date)
+        entries = record.setdefault(SHADOW_CONSUMPTION_KEY, {})
+        if not isinstance(entries, dict):
+            entries = {}
+            record[SHADOW_CONSUMPTION_KEY] = entries
+        if kind == SOURCE_START_OF_DAY:
+            if captured_at.time() < START_OF_DAY_CAPTURE_AFTER:
+                return False
+            existing = entries.get(kind)
+            # The first capture wins, except that a model forecast replaces a
+            # fallback captured while the model was still loading.
+            if isinstance(existing, Mapping) and (
+                existing.get("source") == "heat_pump_model"
+                or shadow.get("source") != "heat_pump_model"
+            ):
+                return False
+        entry: dict[str, Any] = {
+            "captured_at": captured_at.replace(second=0, microsecond=0).isoformat(),
+            "series": [_round(value, 4) for value in series],
+        }
+        # The heat pump part of the series (the rest is the base load) and the
+        # current forecast made at the same moment, for the panel's split and
+        # its like-for-like comparison.
+        for name, raw in (
+            ("heat_pump_series", shadow.get("heat_pump_intervals_kwh")),
+            ("current_series", shadow.get("current_intervals_kwh")),
+        ):
+            values = _series(raw)
+            if any(value is not None for value in values):
+                entry[name] = [_round(value, 4) for value in values]
+        for name in _SHADOW_FIELDS:
+            value = shadow.get(name)
+            entry[name] = _round(_num(value), 3) if name.endswith("_kwh") else _text(value, 96)
+        days = shadow.get("days")
+        day = days.get(local_date.isoformat()) if isinstance(days, Mapping) else None
+        if isinstance(day, Mapping):
+            entry["heat_pump_mode"] = _text(day.get("mode"))
+            entry["effective_temperature_c"] = _round(_num(day.get("effective_temperature_c")), 2)
+            entry["temperature_source"] = _text(day.get("temperature_source"))
+        entries[kind] = entry
+        self._prune(self._now().date())
+        self.request_save()
+        return True
+
     def close_day_from_payload(self, payload: Mapping[str, Any]) -> bool:
         """Freeze one finished diary: its measurements and tomorrow's plan."""
         # The day is over: its last open quarter is final as well. Quarters
@@ -882,7 +963,55 @@ class ForecastHistoryManager:
                     for name in ENERGY_METRICS
                 }
             summary[source] = item
+        # Only days with a heat pump shadow record carry the key, so the
+        # list is unchanged for installations without one.
+        shadow = self._shadow_view(record, actual, with_series=False)
+        if shadow:
+            summary[SHADOW_CONSUMPTION_KEY] = shadow
         return summary
+
+    def _shadow_view(
+        self,
+        record: Mapping[str, Any],
+        actual: Mapping[str, Any] | None,
+        *,
+        with_series: bool,
+    ) -> dict[str, Any]:
+        """Shadow entries with their errors against measured consumption.
+
+        ``compare`` is the shadow forecast, ``current_compare`` the current
+        forecast captured at the same moment, both over the same quarters.
+        """
+        shadow = record.get(SHADOW_CONSUMPTION_KEY)
+        if not isinstance(shadow, Mapping):
+            return {}
+        actual_consumption = ((actual or {}).get("series") or {}).get("consumption") or []
+        result: dict[str, Any] = {}
+        for kind, entry in shadow.items():
+            if not isinstance(entry, Mapping):
+                continue
+            item = (
+                dict(entry)
+                if with_series
+                else {
+                    key: value
+                    for key, value in entry.items()
+                    if not key.endswith("series")
+                }
+            )
+            item["compare"] = (
+                self.compare(entry.get("series") or [], actual_consumption)
+                if actual_consumption
+                else None
+            )
+            current = entry.get("current_series")
+            item["current_compare"] = (
+                self.compare(current, actual_consumption)
+                if actual_consumption and isinstance(current, list)
+                else None
+            )
+            result[str(kind)] = item
+        return result
 
     def list_days(self) -> dict[str, Any]:
         live = self._live_view()
@@ -924,6 +1053,9 @@ class ForecastHistoryManager:
             },
         }
         result["revisions"] = list(record.get("revisions") or [])
+        shadow = self._shadow_view(record, actual, with_series=True)
+        if shadow:
+            result[SHADOW_CONSUMPTION_KEY] = shadow
         if live is not None:
             live_key = live["date"].isoformat()
             if live_key == key:

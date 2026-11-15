@@ -12160,6 +12160,8 @@ async def _async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, opened: li
     # prevents the integration from starting.
     await consumption_tracker.load_consumption_profile()
     await consumption_tracker.load_solar_profile()
+    # Heat pump shadow forecast (no-op unless a heat pump is configured).
+    await consumption_tracker.load_heat_pump()
 
     # Restore household and solar accumulators from persistent storage
     await consumption_tracker.load_accumulators()
@@ -12484,6 +12486,21 @@ async def _async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, opened: li
                 )
             )
             _LOGGER.info("Startup consumption backfill scheduled for after HA fully started")
+
+    # The heat pump shadow forecast learns whenever a heat pump is configured,
+    # independent of predictive charging; it never feeds a control decision.
+    if getattr(consumption_tracker, "heat_pump_profile", None) is not None:
+        if hass.state == CoreState.running:
+            consumption_tracker.start_heat_pump_backfill()
+        else:
+            async def _start_heat_pump_backfill(_event):
+                consumption_tracker.start_heat_pump_backfill()
+
+            entry.async_on_unload(
+                hass.bus.async_listen(
+                    "homeassistant_started", _start_heat_pump_backfill
+                )
+            )
 
     # Dynamic pricing: schedule daily evaluation at 00:05 and run startup catch-up
     if (

@@ -149,6 +149,14 @@ from .const import (
     DEFAULT_SLOT_SOC_MIN_FLOOR,
     DEFAULT_SLOT_SOC_MAX_CEILING,
     MAX_TIME_SLOTS,
+    CONF_HEAT_PUMP_POWER_SENSORS,
+    CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR,
+    CONF_HEAT_PUMP_WEATHER_ENTITY,
+    CONF_HEAT_PUMP_HEATING_ALLOWED_ENTITY,
+    CONF_HEAT_PUMP_COOLING_ALLOWED_ENTITY,
+    CONF_HEAT_PUMP_STOP_HEATING_TEMP_ENTITY,
+    CONF_HEAT_PUMP_START_COOLING_TEMP_ENTITY,
+    HEAT_PUMP_CONFIG_KEYS,
 )
 from .drivers.base import DriverCapabilities
 from .drivers.esphome import EsphomeEntityDriver
@@ -410,6 +418,122 @@ def _restore_unrenderable_sensors(
             )
             restored[key] = current
     return restored
+
+
+_HEAT_PUMP_TEMPERATURE_UNITS = ("°C", "°F", "C", "F")
+_HEAT_PUMP_FLAG_DOMAINS = ["sensor", "binary_sensor", "switch", "input_boolean", "select"]
+_HEAT_PUMP_THRESHOLD_DOMAINS = ["number", "input_number", "sensor"]
+
+
+def _heat_pump_power_sensor_list(value: Any) -> list[str]:
+    """Normalize the multi-entity selector value to a clean, ordered list."""
+    if not value:
+        return []
+    if isinstance(value, str):
+        value = [value]
+    result: list[str] = []
+    for item in value:
+        entity_id = str(item or "").strip()
+        if entity_id and entity_id not in result:
+            result.append(entity_id)
+    return result
+
+
+def _validate_heat_pump_input(
+    hass: HomeAssistant, user_input: dict[str, Any], stored: dict[str, Any]
+) -> dict[str, str]:
+    """Validate the optional heat pump group.
+
+    Every field is optional, but the group only makes sense with at least one
+    power sensor and an outdoor temperature sensor (the model is trained on
+    measured temperature). A stored entity that is missing from the state
+    machine is tolerated, like the other optional sensors (#419): an
+    integration that is still starting must not block an unrelated save.
+    """
+    errors: dict[str, str] = {}
+    sensors = _heat_pump_power_sensor_list(
+        user_input.get(CONF_HEAT_PUMP_POWER_SENSORS)
+    )
+    stored_sensors = set(
+        _heat_pump_power_sensor_list(stored.get(CONF_HEAT_PUMP_POWER_SENSORS))
+    )
+    others = [
+        key
+        for key in HEAT_PUMP_CONFIG_KEYS
+        if key != CONF_HEAT_PUMP_POWER_SENSORS and user_input.get(key)
+    ]
+    if not sensors:
+        if others:
+            errors[CONF_HEAT_PUMP_POWER_SENSORS] = "heat_pump_power_required"
+        return errors
+    for entity_id in sensors:
+        state = hass.states.get(entity_id)
+        if state is None:
+            if entity_id not in stored_sensors:
+                errors[CONF_HEAT_PUMP_POWER_SENSORS] = "heat_pump_sensor_not_found"
+            continue
+        unit = str(state.attributes.get("unit_of_measurement", "") or "")
+        if unit not in ("W", "kW"):
+            errors[CONF_HEAT_PUMP_POWER_SENSORS] = "heat_pump_power_invalid_unit"
+    temperature = user_input.get(CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR)
+    if not temperature:
+        errors[CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR] = "heat_pump_temperature_required"
+    else:
+        state = hass.states.get(temperature)
+        if state is None:
+            if temperature != stored.get(CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR):
+                errors[CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR] = "heat_pump_sensor_not_found"
+        else:
+            unit = str(state.attributes.get("unit_of_measurement", "") or "")
+            if unit not in _HEAT_PUMP_TEMPERATURE_UNITS:
+                errors[CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR] = (
+                    "heat_pump_temperature_invalid_unit"
+                )
+    weather = user_input.get(CONF_HEAT_PUMP_WEATHER_ENTITY)
+    if weather and not str(weather).startswith("weather."):
+        errors[CONF_HEAT_PUMP_WEATHER_ENTITY] = "heat_pump_weather_invalid"
+    return errors
+
+
+def _heat_pump_schema(current: dict[str, Any]) -> vol.Schema:
+    """Options form for the optional heat pump group (all fields optional)."""
+
+    def suggested(key: str) -> dict[str, Any]:
+        value = current.get(key)
+        return {"suggested_value": value} if value else {}
+
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_HEAT_PUMP_POWER_SENSORS,
+                description=suggested(CONF_HEAT_PUMP_POWER_SENSORS),
+            ): EntitySelector(EntitySelectorConfig(domain="sensor", multiple=True)),
+            vol.Optional(
+                CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR,
+                description=suggested(CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR),
+            ): EntitySelector(EntitySelectorConfig(domain="sensor")),
+            vol.Optional(
+                CONF_HEAT_PUMP_WEATHER_ENTITY,
+                description=suggested(CONF_HEAT_PUMP_WEATHER_ENTITY),
+            ): EntitySelector(EntitySelectorConfig(domain="weather")),
+            vol.Optional(
+                CONF_HEAT_PUMP_HEATING_ALLOWED_ENTITY,
+                description=suggested(CONF_HEAT_PUMP_HEATING_ALLOWED_ENTITY),
+            ): EntitySelector(EntitySelectorConfig(domain=_HEAT_PUMP_FLAG_DOMAINS)),
+            vol.Optional(
+                CONF_HEAT_PUMP_COOLING_ALLOWED_ENTITY,
+                description=suggested(CONF_HEAT_PUMP_COOLING_ALLOWED_ENTITY),
+            ): EntitySelector(EntitySelectorConfig(domain=_HEAT_PUMP_FLAG_DOMAINS)),
+            vol.Optional(
+                CONF_HEAT_PUMP_STOP_HEATING_TEMP_ENTITY,
+                description=suggested(CONF_HEAT_PUMP_STOP_HEATING_TEMP_ENTITY),
+            ): EntitySelector(EntitySelectorConfig(domain=_HEAT_PUMP_THRESHOLD_DOMAINS)),
+            vol.Optional(
+                CONF_HEAT_PUMP_START_COOLING_TEMP_ENTITY,
+                description=suggested(CONF_HEAT_PUMP_START_COOLING_TEMP_ENTITY),
+            ): EntitySelector(EntitySelectorConfig(domain=_HEAT_PUMP_THRESHOLD_DOMAINS)),
+        }
+    )
 
 
 def _has_global_forecast_sensor(config) -> bool:
@@ -4026,6 +4150,11 @@ class OptionsFlowHandler(OptionsFlow):
             new_data.pop(CONF_OFFGRID_POWER_SENSOR, None)
             new_data.pop(CONF_OFFGRID_METER_INVERTED, None)
             new_data.pop(CONF_OFFGRID_MODE_ENABLED, None)
+        # The heat pump group is optional: an empty field is dropped instead of
+        # stored as None, so an entry without it keeps its previous shape.
+        for key in HEAT_PUMP_CONFIG_KEYS:
+            if not new_data.get(key):
+                new_data.pop(key, None)
         new_data = normalize_solar_forecast_config(new_data)
         new_data[CONF_ENABLE_BALANCE_MONITOR] = True
         entry_id = self.config_entry.entry_id
@@ -4060,8 +4189,42 @@ class OptionsFlowHandler(OptionsFlow):
             "time_slots",
             "excluded_devices",
             "predictive_charging",
+            "heat_pump",
         ]
         return self.async_show_menu(step_id="init", menu_options=menu_options)
+
+    async def async_step_heat_pump(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure the optional heat pump inputs of the shadow forecast.
+
+        Clearing every field removes the group; nothing else in the entry
+        changes, and without a power sensor the integration behaves as if the
+        feature did not exist.
+        """
+        errors: dict[str, str] = {}
+        stored = dict(self.config_entry.data)
+        if user_input is not None:
+            errors = _validate_heat_pump_input(self.hass, user_input, stored)
+            if not errors:
+                sensors = _heat_pump_power_sensor_list(
+                    user_input.get(CONF_HEAT_PUMP_POWER_SENSORS)
+                )
+                if not sensors:
+                    for key in HEAT_PUMP_CONFIG_KEYS:
+                        self.config_data[key] = None
+                else:
+                    self.config_data[CONF_HEAT_PUMP_POWER_SENSORS] = sensors
+                    for key in HEAT_PUMP_CONFIG_KEYS:
+                        if key != CONF_HEAT_PUMP_POWER_SENSORS:
+                            self.config_data[key] = user_input.get(key) or None
+                return await self._save_and_finish()
+        current = user_input if user_input is not None else stored
+        return self.async_show_form(
+            step_id="heat_pump",
+            data_schema=_heat_pump_schema(current),
+            errors=errors or None,
+        )
 
     async def async_step_remove_battery(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Remove one specific battery (the count flow can only drop the last one)."""

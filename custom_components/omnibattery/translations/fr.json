@@ -868,7 +868,8 @@
           "temp_charge_limit": "Limite de charge par température",
           "capacity_protection": "Protection de capacité",
           "pd_advanced": "Contrôleur PD (avancé)",
-          "hourly_balance": "Bilan horaire net"
+          "hourly_balance": "Bilan horaire net",
+          "heat_pump": "Pompe à chaleur (évaluation de la prévision)"
         }
       },
       "sensors": {
@@ -1411,6 +1412,28 @@
           "port": "Modbus TCP port (default 502)",
           "slave_id": "Modbus slave/unit id (default 1)"
         }
+      },
+      "heat_pump": {
+        "title": "Pompe à chaleur",
+        "description": "Facultatif. Permet à l'intégration d'apprendre une prévision dépendante de la température pour une pompe à chaleur, en plus de la charge de base du foyer. La prévision tourne uniquement en évaluation (mode fantôme) : elle apparaît dans les diagnostics et un capteur de diagnostic et ne modifie aucune décision de charge. Laissez tous les champs vides pour la désactiver.",
+        "data": {
+          "heat_pump_power_sensors": "Capteurs de puissance de la pompe à chaleur",
+          "heat_pump_outdoor_temperature_sensor": "Capteur de température extérieure",
+          "heat_pump_weather_entity": "Entité de prévision météo (facultatif)",
+          "heat_pump_heating_allowed_entity": "Chauffage autorisé (facultatif)",
+          "heat_pump_cooling_allowed_entity": "Refroidissement autorisé (facultatif)",
+          "heat_pump_stop_heating_temperature_entity": "Température d'arrêt du chauffage (facultatif)",
+          "heat_pump_start_cooling_temperature_entity": "Température de démarrage du refroidissement (facultatif)"
+        },
+        "data_description": {
+          "heat_pump_power_sensors": "Un ou plusieurs capteurs de puissance (W ou kW) qui mesurent ensemble la pompe à chaleur, par exemple une unité extérieure et une unité intérieure. Leur somme est utilisée.",
+          "heat_pump_outdoor_temperature_sensor": "Température extérieure mesurée. Ses statistiques à long terme servent à entraîner le modèle.",
+          "heat_pump_weather_entity": "Entité météo dont la prévision horaire fournit la température attendue. Sans elle, les 24 dernières heures de température mesurée sont utilisées.",
+          "heat_pump_heating_allowed_entity": "Entité à on/1 tant que le chauffage est activé sur la pompe à chaleur. Sans elle, le mode est déduit de la consommation d'énergie.",
+          "heat_pump_cooling_allowed_entity": "Entité à on/1 tant que le refroidissement est activé sur la pompe à chaleur. Sans elle, le mode est déduit de la consommation d'énergie.",
+          "heat_pump_stop_heating_temperature_entity": "Entité numérique avec la température extérieure au-dessus de laquelle la pompe à chaleur cesse de chauffer. 17 °C par défaut.",
+          "heat_pump_start_cooling_temperature_entity": "Entité numérique avec la température extérieure au-dessus de laquelle la pompe à chaleur commence à refroidir. 24 °C par défaut."
+        }
       }
     },
     "error": {
@@ -1452,7 +1475,13 @@
       "discharge_below_charge": "Le prix plancher de décharge ne peut pas être inférieur au prix maximal (de charge). Définissez-le égal ou supérieur, ou laissez-le vide pour réutiliser le seuil de charge.",
       "host_or_serial_required": "Saisissez soit une adresse IP (TCP), soit le chemin d'un port série (Modbus RTU).",
       "missing_power_sensor": "Sélectionnez un capteur de puissance, ou activez Chargeur VE sans télémétrie et sélectionnez un capteur d'activité.",
-      "missing_activity_sensor": "Sélectionnez un capteur appareil actif / charge VE pour le contrôle dynamique ou un chargeur sans télémétrie."
+      "missing_activity_sensor": "Sélectionnez un capteur appareil actif / charge VE pour le contrôle dynamique ou un chargeur sans télémétrie.",
+      "heat_pump_power_required": "Sélectionnez au moins un capteur de puissance de la pompe à chaleur, ou videz tous les champs de la pompe à chaleur.",
+      "heat_pump_sensor_not_found": "Le capteur sélectionné n'existe pas.",
+      "heat_pump_power_invalid_unit": "Les capteurs de puissance de la pompe à chaleur doivent être en W ou kW.",
+      "heat_pump_temperature_required": "Un capteur de température extérieure est requis avec un capteur de puissance de pompe à chaleur.",
+      "heat_pump_temperature_invalid_unit": "Le capteur de température extérieure doit être en °C ou °F.",
+      "heat_pump_weather_invalid": "Sélectionnez une entité météo."
     }
   },
   "selector": {
@@ -2456,6 +2485,9 @@
       },
       "input_limit": {
         "name": "Limite d'Entrée"
+      },
+      "heat_pump_shadow_forecast": {
+        "name": "Prévision fantôme de consommation avec pompe à chaleur"
       }
     },
     "binary_sensor": {

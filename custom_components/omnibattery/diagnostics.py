@@ -940,6 +940,14 @@ async def async_get_config_entry_diagnostics(
             solar_profile = _json_safe(solar_tracker.diagnostics())
         except Exception as exc:  # noqa: BLE001
             solar_profile = {"error": str(exc)}
+    # Heat pump shadow forecast: evaluation only, never read by control.
+    heat_pump_forecast: dict[str, Any] = {"configured": False}
+    heat_pump_info = getattr(tracker, "heat_pump_diagnostics", None)
+    if callable(heat_pump_info):
+        try:
+            heat_pump_forecast = _json_safe(heat_pump_info())
+        except Exception as exc:  # noqa: BLE001
+            heat_pump_forecast = {"error": str(exc)}
 
     return {
         "entry": {
@@ -959,6 +967,7 @@ async def async_get_config_entry_diagnostics(
         "recorder_backfill": recorder_backfill,
         "vacation_learning": vacation,
         "solar_profile": solar_profile,
+        "heat_pump_forecast": heat_pump_forecast,
         "curtailment": _curtailment_info(controller),
         "surplus_price_hold": _surplus_hold_info(controller),
         "discharge_reserve": _discharge_reserve_info(controller),

@@ -305,6 +305,9 @@ async def async_setup_entry(
     if controller and getattr(controller, "_consumption_tracker", None) is not None:
         entities.append(ConsumptionProfileCaptureSensor(controller))
         entities.append(ConsumptionProfileSensor(controller))
+        # Heat pump shadow forecast: only with a configured heat pump.
+        if getattr(controller._consumption_tracker, "heat_pump_profile", None) is not None:
+            entities.append(HeatPumpShadowForecastSensor(controller))
 
 
 
@@ -2531,6 +2534,107 @@ class ConsumptionProfileSensor(SensorEntity):
             "peak_hour": peak_index,
             "peak_hour_kwh": round(hourly[peak_index], 6) if hourly else 0.0,
         }
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Omnibattery System",
+            "manufacturer": "Omnibattery",
+            "model": "Multi-Battery System",
+        }
+
+
+class HeatPumpShadowForecastSensor(SensorEntity):
+    """Today's heat pump shadow consumption forecast, next to the current one.
+
+    Evaluation only: the value is the base-load profile plus the temperature
+    model for the heat pump. No planner or control decision reads it. The
+    attributes carry tomorrow's shadow forecast and the current (combined
+    profile) forecast for both days so the two can be compared.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "heat_pump_shadow_forecast"
+    _attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}heat_pump_shadow_forecast"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = None
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:heat-pump-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_should_poll = True
+    # Polled every 30 s by default; the forecast barely moves in between.
+    _CACHE_S = 120.0
+
+    def __init__(self, controller) -> None:
+        self._controller = controller
+        self.entity_id = system_entity_id("sensor", "heat_pump_shadow_forecast")
+        self._cached: dict | None = None
+        self._cached_at: float | None = None
+
+    def _summary(self) -> dict | None:
+        now = time.monotonic()
+        if self._cached is not None and self._cached_at is not None and (
+            now - self._cached_at < self._CACHE_S
+        ):
+            return self._cached
+        tracker = getattr(self._controller, "_consumption_tracker", None)
+        summary_fn = getattr(tracker, "heat_pump_shadow_summary", None)
+        if not callable(summary_fn):
+            return None
+        try:
+            summary = summary_fn()
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.debug("Heat pump shadow sensor: unavailable: %s", exc)
+            return None
+        self._cached = summary
+        self._cached_at = now
+        return summary
+
+    @property
+    def native_value(self) -> float | None:
+        summary = self._summary() or {}
+        today = summary.get("today")
+        if not isinstance(today, dict) or today.get("shadow_kwh") is None:
+            return None
+        return round(float(today["shadow_kwh"]), 3)
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        summary = self._summary()
+        if not summary or not summary.get("configured"):
+            return {"state": "unavailable"}
+        attributes: dict = {"mode": "shadow"}
+        for label in ("today", "tomorrow"):
+            item = summary.get(label)
+            if not isinstance(item, dict):
+                continue
+            days = item.get("days") or {}
+            day = days.get(item.get("date")) if isinstance(days, dict) else None
+            day = day if isinstance(day, dict) else {}
+            intervals = item.get("intervals_kwh") or []
+            attributes.update(
+                {
+                    f"{label}_date": item.get("date"),
+                    f"{label}_shadow_kwh": item.get("shadow_kwh"),
+                    f"{label}_current_kwh": item.get("current_kwh"),
+                    f"{label}_base_kwh": item.get("base_kwh"),
+                    f"{label}_heat_pump_kwh": item.get("heat_pump_kwh"),
+                    f"{label}_source": item.get("source"),
+                    f"{label}_fallback_reason": item.get("fallback_reason"),
+                    f"{label}_heat_pump_mode": day.get("mode"),
+                    f"{label}_effective_temperature_c": day.get(
+                        "effective_temperature_c"
+                    ),
+                    f"{label}_temperature_source": day.get("temperature_source"),
+                    f"{label}_hourly_shadow_kwh": [
+                        round(sum(intervals[index:index + 4]), 4)
+                        for index in range(0, len(intervals), 4)
+                    ],
+                }
+            )
+        return attributes
 
     @property
     def device_info(self):

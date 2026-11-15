@@ -59,7 +59,7 @@ const I18N = {
     evCharger: "EV charger",
     flowToggle: "Switch diagram",
     tabResumen: "Overview", tabBaterias: "Batteries", tabControl: "Control",
-    tabForecast: "Forecast", fcAccuracyTitle: "Forecast vs actual", fcDetailTitle: "Day in quarter-hours", fcDriftTitle: "Prediction over time", fcSolar: "Solar", fcConsumption: "Consumption", fcGridCharge: "Grid charge", fcDischarge: "Battery discharge", fcActual: "Actual", fcDayAhead: "Day-ahead plan", fcStartOfDay: "Start-of-day plan", fcCurrentPlan: "Current plan", fcExpected: "Expected for the day", fcExport: "Download as CSV", fcExportDays: "Days", fcExportIntervals: "Quarter-hours", fcExportRevisions: "Revisions", fcNoHistory: "No forecast history yet. It is recorded from now on: tonight's plan for tomorrow is the first day-ahead forecast.", fcUnavailable: "Forecast history is not available. Restart Home Assistant after updating the integration.", fcNoFinishedDays: "No finished days yet", fcNoRevisions: "No plan revisions recorded for this day", fcDate: "Date", fcError: "error", fcCoverage: "covers {n} of 96 quarters", fcPartialShort: "{n}/96", fcCaptured: "made {time}", fcPartial: "so far", fcFullDay: "{kwh} kWh all day", fcPrev: "Previous day", fcNext: "Next day", fcToday: "Today", fcTomorrow: "Tomorrow", fcAxis: "kWh/15 min", fcDriftNote: "Each point is a plan revision: the measured part of the day plus what the plan still expected. Day-ahead points only appear when that plan covered the whole day. The line holds each value until the next revision.", fcPartialPlanNote: "Plans that covered only part of the day have no bar; the table compares them over the quarters they covered.", fcNoPlanMode: "This mode makes no plan ahead, so only measurements are recorded.",
+    tabForecast: "Forecast", fcAccuracyTitle: "Forecast vs actual", fcDetailTitle: "Day in quarter-hours", fcDriftTitle: "Prediction over time", fcSolar: "Solar", fcConsumption: "Consumption", fcGridCharge: "Grid charge", fcDischarge: "Battery discharge", fcActual: "Actual", fcDayAhead: "Day-ahead plan", fcStartOfDay: "Start-of-day plan", fcCurrentPlan: "Current plan", fcExpected: "Expected for the day", fcExport: "Download as CSV", fcExportDays: "Days", fcExportIntervals: "Quarter-hours", fcExportRevisions: "Revisions", fcNoHistory: "No forecast history yet. It is recorded from now on: tonight's plan for tomorrow is the first day-ahead forecast.", fcUnavailable: "Forecast history is not available. Restart Home Assistant after updating the integration.", fcNoFinishedDays: "No finished days yet", fcNoRevisions: "No plan revisions recorded for this day", fcDate: "Date", fcError: "error", fcCoverage: "covers {n} of 96 quarters", fcPartialShort: "{n}/96", fcCaptured: "made {time}", fcPartial: "so far", fcFullDay: "{kwh} kWh all day", fcPrev: "Previous day", fcNext: "Next day", fcToday: "Today", fcTomorrow: "Tomorrow", fcAxis: "kWh/15 min", fcDriftNote: "Each point is a plan revision: the measured part of the day plus what the plan still expected. Day-ahead points only appear when that plan covered the whole day. The line holds each value until the next revision.", fcPartialPlanNote: "Plans that covered only part of the day have no bar; the table compares them over the quarters they covered.", fcNoPlanMode: "This mode makes no plan ahead, so only measurements are recorded.", fcShadow: "Heat pump model", fcShadowBase: "Base load", fcShadowHeatPump: "Heat pump", fcShadowCurrent: "current forecast", fcShadowFallback: "not used ({reason})", fcHpHeating: "heating", fcHpCooling: "cooling", fcHpHotWater: "hot water only", fcShadowWhyBase: "base load still learning", fcShadowWhyModel: "heat pump model still learning", fcShadowWhyTemp: "no temperature", fcShadowWhyVacation: "vacation mode",
     moreInfo: "Show history",
     zoomReset: "All",
     infoModel: "Model", infoSoftware: "Software", infoSerial: "Serial", infoInverter: "Inverter", infoPowerModule: "Power module",
@@ -151,7 +151,7 @@ const I18N = {
     evCharger: "Cargador VE",
     flowToggle: "Cambiar diagrama",
     tabResumen: "Resumen", tabBaterias: "Baterías", tabControl: "Control",
-    tabForecast: "Previsión", fcAccuracyTitle: "Previsión vs real", fcDetailTitle: "Día en cuartos de hora", fcDriftTitle: "Previsión en el tiempo", fcSolar: "Solar", fcConsumption: "Consumo", fcGridCharge: "Carga de red", fcDischarge: "Descarga de batería", fcActual: "Real", fcDayAhead: "Plan del día anterior", fcStartOfDay: "Plan de inicio del día", fcCurrentPlan: "Plan actual", fcExpected: "Previsto para el día", fcExport: "Descargar como CSV", fcExportDays: "Días", fcExportIntervals: "Cuartos de hora", fcExportRevisions: "Revisiones", fcNoHistory: "Aún no hay historial de previsiones. Se registra a partir de ahora: el plan de esta noche para mañana es la primera previsión del día anterior.", fcUnavailable: "El historial de previsiones no está disponible. Reinicia Home Assistant tras actualizar la integración.", fcNoFinishedDays: "Aún no hay días terminados", fcNoRevisions: "No hay revisiones del plan para este día", fcDate: "Fecha", fcError: "error", fcCoverage: "cubre {n} de 96 cuartos", fcPartialShort: "{n}/96", fcCaptured: "hecho {time}", fcPartial: "hasta ahora", fcFullDay: "{kwh} kWh todo el día", fcPrev: "Día anterior", fcNext: "Día siguiente", fcToday: "Hoy", fcTomorrow: "Mañana", fcAxis: "kWh/15 min", fcDriftNote: "Cada punto es una revisión del plan: la parte medida del día más lo que el plan aún esperaba. Los puntos del día anterior solo aparecen cuando ese plan cubría el día completo. La línea mantiene cada valor hasta la siguiente revisión.", fcPartialPlanNote: "Los planes que solo cubrían parte del día no tienen barra; la tabla los compara en los cuartos que cubrían.", fcNoPlanMode: "Este modo no hace un plan por adelantado, así que solo se registran las mediciones.",
+    tabForecast: "Previsión", fcAccuracyTitle: "Previsión vs real", fcDetailTitle: "Día en cuartos de hora", fcDriftTitle: "Previsión en el tiempo", fcSolar: "Solar", fcConsumption: "Consumo", fcGridCharge: "Carga de red", fcDischarge: "Descarga de batería", fcActual: "Real", fcDayAhead: "Plan del día anterior", fcStartOfDay: "Plan de inicio del día", fcCurrentPlan: "Plan actual", fcExpected: "Previsto para el día", fcExport: "Descargar como CSV", fcExportDays: "Días", fcExportIntervals: "Cuartos de hora", fcExportRevisions: "Revisiones", fcNoHistory: "Aún no hay historial de previsiones. Se registra a partir de ahora: el plan de esta noche para mañana es la primera previsión del día anterior.", fcUnavailable: "El historial de previsiones no está disponible. Reinicia Home Assistant tras actualizar la integración.", fcNoFinishedDays: "Aún no hay días terminados", fcNoRevisions: "No hay revisiones del plan para este día", fcDate: "Fecha", fcError: "error", fcCoverage: "cubre {n} de 96 cuartos", fcPartialShort: "{n}/96", fcCaptured: "hecho {time}", fcPartial: "hasta ahora", fcFullDay: "{kwh} kWh todo el día", fcPrev: "Día anterior", fcNext: "Día siguiente", fcToday: "Hoy", fcTomorrow: "Mañana", fcAxis: "kWh/15 min", fcDriftNote: "Cada punto es una revisión del plan: la parte medida del día más lo que el plan aún esperaba. Los puntos del día anterior solo aparecen cuando ese plan cubría el día completo. La línea mantiene cada valor hasta la siguiente revisión.", fcPartialPlanNote: "Los planes que solo cubrían parte del día no tienen barra; la tabla los compara en los cuartos que cubrían.", fcNoPlanMode: "Este modo no hace un plan por adelantado, así que solo se registran las mediciones.", fcShadow: "Modelo bomba de calor", fcShadowBase: "Carga base", fcShadowHeatPump: "Bomba de calor", fcShadowCurrent: "previsión actual", fcShadowFallback: "no usado ({reason})", fcHpHeating: "calefacción", fcHpCooling: "refrigeración", fcHpHotWater: "solo agua caliente", fcShadowWhyBase: "carga base aún aprendiendo", fcShadowWhyModel: "modelo de bomba de calor aún aprendiendo", fcShadowWhyTemp: "sin temperatura", fcShadowWhyVacation: "modo vacaciones",
     moreInfo: "Ver histórico",
     zoomReset: "Todo",
     infoModel: "Modelo", infoSoftware: "Software", infoSerial: "N.º serie", infoInverter: "Inversor", infoPowerModule: "Módulo de potencia",
@@ -244,7 +244,7 @@ const I18N = {
     evCharger: "Carregador VE",
     flowToggle: "Canviar diagrama",
     tabResumen: "Resum", tabBaterias: "Bateries", tabControl: "Control",
-    tabForecast: "Previsió", fcAccuracyTitle: "Previsió vs real", fcDetailTitle: "Dia en quarts d'hora", fcDriftTitle: "Previsió en el temps", fcSolar: "Solar", fcConsumption: "Consum", fcGridCharge: "Càrrega de xarxa", fcDischarge: "Descàrrega de bateria", fcActual: "Real", fcDayAhead: "Pla del dia anterior", fcStartOfDay: "Pla d'inici del dia", fcCurrentPlan: "Pla actual", fcExpected: "Previst per al dia", fcExport: "Baixa com a CSV", fcExportDays: "Dies", fcExportIntervals: "Quarts d'hora", fcExportRevisions: "Revisions", fcNoHistory: "Encara no hi ha historial de previsions. Es registra a partir d'ara: el pla d'aquesta nit per a demà és la primera previsió del dia anterior.", fcUnavailable: "L'historial de previsions no està disponible. Reinicia Home Assistant després d'actualitzar la integració.", fcNoFinishedDays: "Encara no hi ha dies acabats", fcNoRevisions: "No hi ha revisions del pla per a aquest dia", fcDate: "Data", fcError: "error", fcCoverage: "cobreix {n} de 96 quarts", fcPartialShort: "{n}/96", fcCaptured: "fet {time}", fcPartial: "fins ara", fcFullDay: "{kwh} kWh tot el dia", fcPrev: "Dia anterior", fcNext: "Dia següent", fcToday: "Avui", fcTomorrow: "Demà", fcAxis: "kWh/15 min", fcDriftNote: "Cada punt és una revisió del pla: la part mesurada del dia més el que el pla encara esperava. Els punts del dia anterior només apareixen quan aquell pla cobria el dia sencer. La línia manté cada valor fins a la revisió següent.", fcPartialPlanNote: "Els plans que només cobrien part del dia no tenen barra; la taula els compara en els quarts que cobrien.", fcNoPlanMode: "Aquest mode no fa cap pla per endavant, així que només es registren les mesures.",
+    tabForecast: "Previsió", fcAccuracyTitle: "Previsió vs real", fcDetailTitle: "Dia en quarts d'hora", fcDriftTitle: "Previsió en el temps", fcSolar: "Solar", fcConsumption: "Consum", fcGridCharge: "Càrrega de xarxa", fcDischarge: "Descàrrega de bateria", fcActual: "Real", fcDayAhead: "Pla del dia anterior", fcStartOfDay: "Pla d'inici del dia", fcCurrentPlan: "Pla actual", fcExpected: "Previst per al dia", fcExport: "Baixa com a CSV", fcExportDays: "Dies", fcExportIntervals: "Quarts d'hora", fcExportRevisions: "Revisions", fcNoHistory: "Encara no hi ha historial de previsions. Es registra a partir d'ara: el pla d'aquesta nit per a demà és la primera previsió del dia anterior.", fcUnavailable: "L'historial de previsions no està disponible. Reinicia Home Assistant després d'actualitzar la integració.", fcNoFinishedDays: "Encara no hi ha dies acabats", fcNoRevisions: "No hi ha revisions del pla per a aquest dia", fcDate: "Data", fcError: "error", fcCoverage: "cobreix {n} de 96 quarts", fcPartialShort: "{n}/96", fcCaptured: "fet {time}", fcPartial: "fins ara", fcFullDay: "{kwh} kWh tot el dia", fcPrev: "Dia anterior", fcNext: "Dia següent", fcToday: "Avui", fcTomorrow: "Demà", fcAxis: "kWh/15 min", fcDriftNote: "Cada punt és una revisió del pla: la part mesurada del dia més el que el pla encara esperava. Els punts del dia anterior només apareixen quan aquell pla cobria el dia sencer. La línia manté cada valor fins a la revisió següent.", fcPartialPlanNote: "Els plans que només cobrien part del dia no tenen barra; la taula els compara en els quarts que cobrien.", fcNoPlanMode: "Aquest mode no fa cap pla per endavant, així que només es registren les mesures.", fcShadow: "Model bomba de calor", fcShadowBase: "Càrrega base", fcShadowHeatPump: "Bomba de calor", fcShadowCurrent: "previsió actual", fcShadowFallback: "no utilitzat ({reason})", fcHpHeating: "calefacció", fcHpCooling: "refrigeració", fcHpHotWater: "només aigua calenta", fcShadowWhyBase: "càrrega base encara aprenent", fcShadowWhyModel: "model de bomba de calor encara aprenent", fcShadowWhyTemp: "sense temperatura", fcShadowWhyVacation: "mode vacances",
     moreInfo: "Veure històric",
     zoomReset: "Tot",
     infoModel: "Model", infoSoftware: "Programari", infoSerial: "Núm. sèrie", infoInverter: "Inversor", infoPowerModule: "Mòdul de potència",
@@ -332,7 +332,7 @@ const I18N = {
     evCharger: "E-Auto-Lader",
     flowToggle: "Diagramm wechseln",
     tabResumen: "Übersicht", tabBaterias: "Batterien", tabControl: "Steuerung",
-    tabForecast: "Prognose", fcAccuracyTitle: "Prognose vs. Ist", fcDetailTitle: "Tag in Viertelstunden", fcDriftTitle: "Prognose im Zeitverlauf", fcSolar: "Solar", fcConsumption: "Verbrauch", fcGridCharge: "Netzladung", fcDischarge: "Batterieentladung", fcActual: "Ist", fcDayAhead: "Vortagesplan", fcStartOfDay: "Plan zu Tagesbeginn", fcCurrentPlan: "Aktueller Plan", fcExpected: "Erwartet für den Tag", fcExport: "Als CSV herunterladen", fcExportDays: "Tage", fcExportIntervals: "Viertelstunden", fcExportRevisions: "Revisionen", fcNoHistory: "Noch kein Prognoseverlauf. Er wird ab jetzt aufgezeichnet: Der heutige Abendplan für morgen ist die erste Vortagesprognose.", fcUnavailable: "Der Prognoseverlauf ist nicht verfügbar. Starte Home Assistant nach dem Update der Integration neu.", fcNoFinishedDays: "Noch keine abgeschlossenen Tage", fcNoRevisions: "Für diesen Tag wurden keine Planrevisionen aufgezeichnet", fcDate: "Datum", fcError: "Abweichung", fcCoverage: "deckt {n} von 96 Viertelstunden ab", fcPartialShort: "{n}/96", fcCaptured: "erstellt {time}", fcPartial: "bisher", fcFullDay: "{kwh} kWh ganzer Tag", fcPrev: "Vorheriger Tag", fcNext: "Nächster Tag", fcToday: "Heute", fcTomorrow: "Morgen", fcAxis: "kWh/15 min", fcDriftNote: "Jeder Punkt ist eine Planrevision: der gemessene Teil des Tages plus das, was der Plan noch erwartete. Vortagespunkte erscheinen nur, wenn dieser Plan den ganzen Tag abdeckte. Die Linie hält jeden Wert bis zur nächsten Revision.", fcPartialPlanNote: "Pläne, die nur einen Teil des Tages abdeckten, haben keinen Balken; die Tabelle vergleicht sie über die abgedeckten Viertelstunden.", fcNoPlanMode: "Dieser Modus plant nicht voraus, daher werden nur Messwerte aufgezeichnet.",
+    tabForecast: "Prognose", fcAccuracyTitle: "Prognose vs. Ist", fcDetailTitle: "Tag in Viertelstunden", fcDriftTitle: "Prognose im Zeitverlauf", fcSolar: "Solar", fcConsumption: "Verbrauch", fcGridCharge: "Netzladung", fcDischarge: "Batterieentladung", fcActual: "Ist", fcDayAhead: "Vortagesplan", fcStartOfDay: "Plan zu Tagesbeginn", fcCurrentPlan: "Aktueller Plan", fcExpected: "Erwartet für den Tag", fcExport: "Als CSV herunterladen", fcExportDays: "Tage", fcExportIntervals: "Viertelstunden", fcExportRevisions: "Revisionen", fcNoHistory: "Noch kein Prognoseverlauf. Er wird ab jetzt aufgezeichnet: Der heutige Abendplan für morgen ist die erste Vortagesprognose.", fcUnavailable: "Der Prognoseverlauf ist nicht verfügbar. Starte Home Assistant nach dem Update der Integration neu.", fcNoFinishedDays: "Noch keine abgeschlossenen Tage", fcNoRevisions: "Für diesen Tag wurden keine Planrevisionen aufgezeichnet", fcDate: "Datum", fcError: "Abweichung", fcCoverage: "deckt {n} von 96 Viertelstunden ab", fcPartialShort: "{n}/96", fcCaptured: "erstellt {time}", fcPartial: "bisher", fcFullDay: "{kwh} kWh ganzer Tag", fcPrev: "Vorheriger Tag", fcNext: "Nächster Tag", fcToday: "Heute", fcTomorrow: "Morgen", fcAxis: "kWh/15 min", fcDriftNote: "Jeder Punkt ist eine Planrevision: der gemessene Teil des Tages plus das, was der Plan noch erwartete. Vortagespunkte erscheinen nur, wenn dieser Plan den ganzen Tag abdeckte. Die Linie hält jeden Wert bis zur nächsten Revision.", fcPartialPlanNote: "Pläne, die nur einen Teil des Tages abdeckten, haben keinen Balken; die Tabelle vergleicht sie über die abgedeckten Viertelstunden.", fcNoPlanMode: "Dieser Modus plant nicht voraus, daher werden nur Messwerte aufgezeichnet.", fcShadow: "Wärmepumpenmodell", fcShadowBase: "Grundlast", fcShadowHeatPump: "Wärmepumpe", fcShadowCurrent: "aktuelle Prognose", fcShadowFallback: "nicht verwendet ({reason})", fcHpHeating: "Heizen", fcHpCooling: "Kühlen", fcHpHotWater: "nur Warmwasser", fcShadowWhyBase: "Grundlast lernt noch", fcShadowWhyModel: "Wärmepumpenmodell lernt noch", fcShadowWhyTemp: "keine Temperatur", fcShadowWhyVacation: "Urlaubsmodus",
     moreInfo: "Verlauf anzeigen",
     zoomReset: "Alles",
     infoModel: "Modell", infoSoftware: "Software", infoSerial: "Seriennr.", infoInverter: "Wechselrichter", infoPowerModule: "Leistungsmodul",
@@ -420,7 +420,7 @@ const I18N = {
     evCharger: "Chargeur VE",
     flowToggle: "Changer de diagramme",
     tabResumen: "Résumé", tabBaterias: "Batteries", tabControl: "Contrôle",
-    tabForecast: "Prévision", fcAccuracyTitle: "Prévision vs réel", fcDetailTitle: "Journée par quarts d'heure", fcDriftTitle: "Prévision dans le temps", fcSolar: "Solaire", fcConsumption: "Consommation", fcGridCharge: "Charge réseau", fcDischarge: "Décharge batterie", fcActual: "Réel", fcDayAhead: "Plan de la veille", fcStartOfDay: "Plan du début de journée", fcCurrentPlan: "Plan actuel", fcExpected: "Prévu pour la journée", fcExport: "Télécharger en CSV", fcExportDays: "Jours", fcExportIntervals: "Quarts d'heure", fcExportRevisions: "Révisions", fcNoHistory: "Pas encore d'historique des prévisions. Il est enregistré à partir de maintenant : le plan de ce soir pour demain est la première prévision de la veille.", fcUnavailable: "L'historique des prévisions n'est pas disponible. Redémarrez Home Assistant après la mise à jour de l'intégration.", fcNoFinishedDays: "Pas encore de journées terminées", fcNoRevisions: "Aucune révision du plan enregistrée pour ce jour", fcDate: "Date", fcError: "écart", fcCoverage: "couvre {n} des 96 quarts d'heure", fcPartialShort: "{n}/96", fcCaptured: "établi {time}", fcPartial: "jusqu'ici", fcFullDay: "{kwh} kWh sur la journée", fcPrev: "Jour précédent", fcNext: "Jour suivant", fcToday: "Aujourd'hui", fcTomorrow: "Demain", fcAxis: "kWh/15 min", fcDriftNote: "Chaque point est une révision du plan : la partie mesurée de la journée plus ce que le plan prévoyait encore. Les points de la veille n'apparaissent que si ce plan couvrait toute la journée. La ligne garde chaque valeur jusqu'à la révision suivante.", fcPartialPlanNote: "Les plans qui ne couvraient qu'une partie de la journée n'ont pas de barre ; le tableau les compare sur les quarts d'heure couverts.", fcNoPlanMode: "Ce mode ne fait pas de plan à l'avance : seules les mesures sont enregistrées.",
+    tabForecast: "Prévision", fcAccuracyTitle: "Prévision vs réel", fcDetailTitle: "Journée par quarts d'heure", fcDriftTitle: "Prévision dans le temps", fcSolar: "Solaire", fcConsumption: "Consommation", fcGridCharge: "Charge réseau", fcDischarge: "Décharge batterie", fcActual: "Réel", fcDayAhead: "Plan de la veille", fcStartOfDay: "Plan du début de journée", fcCurrentPlan: "Plan actuel", fcExpected: "Prévu pour la journée", fcExport: "Télécharger en CSV", fcExportDays: "Jours", fcExportIntervals: "Quarts d'heure", fcExportRevisions: "Révisions", fcNoHistory: "Pas encore d'historique des prévisions. Il est enregistré à partir de maintenant : le plan de ce soir pour demain est la première prévision de la veille.", fcUnavailable: "L'historique des prévisions n'est pas disponible. Redémarrez Home Assistant après la mise à jour de l'intégration.", fcNoFinishedDays: "Pas encore de journées terminées", fcNoRevisions: "Aucune révision du plan enregistrée pour ce jour", fcDate: "Date", fcError: "écart", fcCoverage: "couvre {n} des 96 quarts d'heure", fcPartialShort: "{n}/96", fcCaptured: "établi {time}", fcPartial: "jusqu'ici", fcFullDay: "{kwh} kWh sur la journée", fcPrev: "Jour précédent", fcNext: "Jour suivant", fcToday: "Aujourd'hui", fcTomorrow: "Demain", fcAxis: "kWh/15 min", fcDriftNote: "Chaque point est une révision du plan : la partie mesurée de la journée plus ce que le plan prévoyait encore. Les points de la veille n'apparaissent que si ce plan couvrait toute la journée. La ligne garde chaque valeur jusqu'à la révision suivante.", fcPartialPlanNote: "Les plans qui ne couvraient qu'une partie de la journée n'ont pas de barre ; le tableau les compare sur les quarts d'heure couverts.", fcNoPlanMode: "Ce mode ne fait pas de plan à l'avance : seules les mesures sont enregistrées.", fcShadow: "Modèle pompe à chaleur", fcShadowBase: "Charge de base", fcShadowHeatPump: "Pompe à chaleur", fcShadowCurrent: "prévision actuelle", fcShadowFallback: "non utilisé ({reason})", fcHpHeating: "chauffage", fcHpCooling: "refroidissement", fcHpHotWater: "eau chaude seule", fcShadowWhyBase: "charge de base en apprentissage", fcShadowWhyModel: "modèle de pompe à chaleur en apprentissage", fcShadowWhyTemp: "pas de température", fcShadowWhyVacation: "mode vacances",
     moreInfo: "Voir l'historique",
     zoomReset: "Tout",
     infoModel: "Modèle", infoSoftware: "Logiciel", infoSerial: "N° série", infoInverter: "Onduleur", infoPowerModule: "Module de puissance",
@@ -508,7 +508,7 @@ const I18N = {
     evCharger: "EV-lader",
     flowToggle: "Diagram wisselen",
     tabResumen: "Overzicht", tabBaterias: "Batterijen", tabControl: "Bediening",
-    tabForecast: "Prognose", fcAccuracyTitle: "Prognose vs werkelijk", fcDetailTitle: "Dag per kwartier", fcDriftTitle: "Prognose in de tijd", fcSolar: "Zon", fcConsumption: "Verbruik", fcGridCharge: "Netladen", fcDischarge: "Batterij-ontlading", fcActual: "Werkelijk", fcDayAhead: "Plan van de dag ervoor", fcStartOfDay: "Plan bij start van de dag", fcCurrentPlan: "Huidig plan", fcExpected: "Verwacht voor de dag", fcExport: "Downloaden als CSV", fcExportDays: "Dagen", fcExportIntervals: "Kwartieren", fcExportRevisions: "Revisies", fcNoHistory: "Nog geen prognosegeschiedenis. Die wordt vanaf nu vastgelegd: het plan van vanavond voor morgen is de eerste prognose van de dag ervoor.", fcUnavailable: "De prognosegeschiedenis is niet beschikbaar. Herstart Home Assistant na het bijwerken van de integratie.", fcNoFinishedDays: "Nog geen afgeronde dagen", fcNoRevisions: "Geen planrevisies vastgelegd voor deze dag", fcDate: "Datum", fcError: "afwijking", fcCoverage: "dekt {n} van 96 kwartieren", fcPartialShort: "{n}/96", fcCaptured: "gemaakt {time}", fcPartial: "tot nu toe", fcFullDay: "{kwh} kWh hele dag", fcPrev: "Vorige dag", fcNext: "Volgende dag", fcToday: "Vandaag", fcTomorrow: "Morgen", fcAxis: "kWh/15 min", fcDriftNote: "Elk punt is een planrevisie: het gemeten deel van de dag plus wat het plan nog verwachtte. Punten van de dag ervoor verschijnen alleen als dat plan de hele dag besloeg. De lijn houdt elke waarde vast tot de volgende revisie.", fcPartialPlanNote: "Plannen die maar een deel van de dag besloegen hebben geen staaf; de tabel vergelijkt ze over de kwartieren die ze besloegen.", fcNoPlanMode: "Deze modus maakt geen plan vooruit, dus alleen metingen worden vastgelegd.",
+    tabForecast: "Prognose", fcAccuracyTitle: "Prognose vs werkelijk", fcDetailTitle: "Dag per kwartier", fcDriftTitle: "Prognose in de tijd", fcSolar: "Zon", fcConsumption: "Verbruik", fcGridCharge: "Netladen", fcDischarge: "Batterij-ontlading", fcActual: "Werkelijk", fcDayAhead: "Plan van de dag ervoor", fcStartOfDay: "Plan bij start van de dag", fcCurrentPlan: "Huidig plan", fcExpected: "Verwacht voor de dag", fcExport: "Downloaden als CSV", fcExportDays: "Dagen", fcExportIntervals: "Kwartieren", fcExportRevisions: "Revisies", fcNoHistory: "Nog geen prognosegeschiedenis. Die wordt vanaf nu vastgelegd: het plan van vanavond voor morgen is de eerste prognose van de dag ervoor.", fcUnavailable: "De prognosegeschiedenis is niet beschikbaar. Herstart Home Assistant na het bijwerken van de integratie.", fcNoFinishedDays: "Nog geen afgeronde dagen", fcNoRevisions: "Geen planrevisies vastgelegd voor deze dag", fcDate: "Datum", fcError: "afwijking", fcCoverage: "dekt {n} van 96 kwartieren", fcPartialShort: "{n}/96", fcCaptured: "gemaakt {time}", fcPartial: "tot nu toe", fcFullDay: "{kwh} kWh hele dag", fcPrev: "Vorige dag", fcNext: "Volgende dag", fcToday: "Vandaag", fcTomorrow: "Morgen", fcAxis: "kWh/15 min", fcDriftNote: "Elk punt is een planrevisie: het gemeten deel van de dag plus wat het plan nog verwachtte. Punten van de dag ervoor verschijnen alleen als dat plan de hele dag besloeg. De lijn houdt elke waarde vast tot de volgende revisie.", fcPartialPlanNote: "Plannen die maar een deel van de dag besloegen hebben geen staaf; de tabel vergelijkt ze over de kwartieren die ze besloegen.", fcNoPlanMode: "Deze modus maakt geen plan vooruit, dus alleen metingen worden vastgelegd.", fcShadow: "Warmtepompmodel", fcShadowBase: "Basislast", fcShadowHeatPump: "Warmtepomp", fcShadowCurrent: "huidige prognose", fcShadowFallback: "niet gebruikt ({reason})", fcHpHeating: "verwarmen", fcHpCooling: "koelen", fcHpHotWater: "alleen warm water", fcShadowWhyBase: "basislast leert nog", fcShadowWhyModel: "warmtepompmodel leert nog", fcShadowWhyTemp: "geen temperatuur", fcShadowWhyVacation: "vakantiemodus",
     moreInfo: "Geschiedenis tonen",
     zoomReset: "Alles",
     infoModel: "Model", infoSoftware: "Software", infoSerial: "Serienr.", infoInverter: "Omvormer", infoPowerModule: "Vermogensmodule",
@@ -606,6 +606,18 @@ const FORECAST_COLORS = {
   day_ahead: "var(--flow-orange)",
   start_of_day: "var(--flow-blue)",
   current_plan: "var(--ink-dim)",
+  // Heat pump shadow forecast (evaluation only, never used by the planner).
+  shadow: "var(--flow-purple)",
+  shadow_base: "var(--flow-green)",
+};
+const HEAT_PUMP_MODE_KEYS = { heating: "fcHpHeating", cooling: "fcHpCooling", hot_water: "fcHpHotWater" };
+// Why a shadow entry fell back to the current forecast; other codes show as-is.
+const HEAT_PUMP_FALLBACK_KEYS = {
+  base_profile_immature: "fcShadowWhyBase",
+  heat_pump_model_immature: "fcShadowWhyModel",
+  no_heat_pump_days: "fcShadowWhyModel",
+  temperature_unavailable: "fcShadowWhyTemp",
+  vacation: "fcShadowWhyVacation",
 };
 
 const DAILY_OPERATION_REASON_KEYS = {
@@ -2784,6 +2796,36 @@ class MarstekVenusPanel extends HTMLElement {
     return `${this._nf(value, 2)} kWh${tag}`;
   }
 
+  /** The heat pump shadow entry to show for a day: the forecast made the day
+   *  before when there is one, else the first one of the day itself. */
+  _fcShadowEntry(block) {
+    if (!block) return null;
+    for (const kind of ["day_ahead", "start_of_day"]) {
+      const item = block[kind];
+      if (item) return { kind, item, model: item.source === "heat_pump_model" };
+    }
+    return null;
+  }
+
+  /** "heating · 2.0 °C · current forecast −3.0 kWh" for one shadow entry. */
+  _fcShadowMeta(item, withCurrent) {
+    const meta = [];
+    const modeKey = HEAT_PUMP_MODE_KEYS[item.heat_pump_mode];
+    if (modeKey) meta.push(this._t(modeKey));
+    if (item.effective_temperature_c != null) meta.push(`${this._nf(item.effective_temperature_c, 1)} °C`);
+    if (withCurrent && item.current_compare) {
+      meta.push(`${this._t("fcShadowCurrent")} ${this._fcErrorText(item.current_compare)}`);
+    }
+    return meta.join(" · ");
+  }
+
+  _fcShadowFallbackText(item) {
+    const code = String(item.fallback_reason || "").split(":")[0];
+    const key = HEAT_PUMP_FALLBACK_KEYS[code];
+    const reason = key ? this._t(key) : code.replace(/_/g, " ");
+    return this._t("fcShadowFallback", { reason: reason || "—" });
+  }
+
   _fcErrorText(cmp) {
     if (!cmp) return "—";
     const sign = cmp.error > 0 ? "+" : "";
@@ -2833,6 +2875,19 @@ class MarstekVenusPanel extends HTMLElement {
       { label: this._t("fcDayAhead"), color: FORECAST_COLORS.day_ahead, values: days.map((d) => barOf(d, "day_ahead")) },
       { label: this._t("fcStartOfDay"), color: FORECAST_COLORS.start_of_day, values: days.map((d) => barOf(d, "start_of_day")) },
     ];
+    // Heat pump shadow forecast: only for consumption, and only when a day
+    // in the list has one (installations without a heat pump see no change).
+    const shadowOf = (d) => (metric.key === "consumption" ? this._fcShadowEntry(d.shadow_consumption) : null);
+    const withShadow = all.some((d) => shadowOf(d));
+    if (withShadow) {
+      groups.push({
+        label: this._t("fcShadow"), color: FORECAST_COLORS.shadow,
+        values: days.map((d) => {
+          const sh = shadowOf(d);
+          return sh && sh.model && sh.item.compare ? sh.item.compare.forecast : null;
+        }),
+      });
+    }
     r.accLegend.innerHTML = this._legendHTML(groups);
     const { svg, yMax } = this._barChartSVG({ groups, count: days.length });
     r.accPlot.innerHTML = this._chartWithYAxis(svg, { yMin: 0, yMax, unit: "kWh" });
@@ -2849,22 +2904,34 @@ class MarstekVenusPanel extends HTMLElement {
     const partialTag = (item) => (item && !this._fcFullPlan(item)
       ? ` <small class="dim">${this._t("fcPartialShort", { n: item.coverage || 0 })}</small>`
       : "");
+    const rowCls = withShadow ? "fc-row fc-row-shadow" : "fc-row";
+    const shadowCell = (d) => {
+      const sh = shadowOf(d);
+      if (!sh) return "<span>—</span>";
+      if (!sh.model) return `<span class="dim">${this._fcShadowFallbackText(sh.item)}</span>`;
+      const cmp = sh.item.compare;
+      return `<span class="fc-err${errCls(cmp)}">${this._fcErrorText(cmp)}` +
+        `<small class="dim fc-sub">${this._fcShadowMeta(sh.item, true)}</small></span>`;
+    };
     const rows = all.slice(0, 31).map((d) => {
       const da = cmpOf(d, "day_ahead");
       const sod = cmpOf(d, "start_of_day");
       const measured = this._fcMeasured(d, metric.key);
       return (
-        `<button class="fc-row${d.date === this._fc.date ? " active" : ""}" data-date="${d.date}">` +
+        `<button class="${rowCls}${d.date === this._fc.date ? " active" : ""}" data-date="${d.date}">` +
         `<span>${this._fcDayLabel(d.date, true)}</span>` +
         `<span>${this._fcActualText(d.actual[metric.key], measured)}</span>` +
         `<span class="fc-err${errCls(da)}">${this._fcErrorText(da)}${da ? partialTag(d.day_ahead) : ""}</span>` +
         `<span class="fc-err${errCls(sod)}">${this._fcErrorText(sod)}${sod ? partialTag(d.start_of_day) : ""}</span>` +
+        (withShadow ? shadowCell(d) : "") +
         `</button>`
       );
     });
     r.table.innerHTML =
-      `<div class="fc-row fc-head"><span>${this._t("fcDate")}</span><span>${this._t("fcActual")}</span>` +
-      `<span>${this._t("fcDayAhead")} · ${this._t("fcError")}</span><span>${this._t("fcStartOfDay")} · ${this._t("fcError")}</span></div>` +
+      `<div class="${rowCls} fc-head"><span>${this._t("fcDate")}</span><span>${this._t("fcActual")}</span>` +
+      `<span>${this._t("fcDayAhead")} · ${this._t("fcError")}</span><span>${this._t("fcStartOfDay")} · ${this._t("fcError")}</span>` +
+      (withShadow ? `<span>${this._t("fcShadow")} · ${this._t("fcError")}</span>` : "") +
+      `</div>` +
       rows.join("");
     r.table.querySelectorAll("button.fc-row").forEach((b) =>
       b.addEventListener("click", () => this._fcLoadDay(b.dataset.date))
@@ -2952,6 +3019,21 @@ class MarstekVenusPanel extends HTMLElement {
     const avail = defs
       .map((d) => ({ ...d, data: ((series[d.key] || {})[metric.key] || []).slice(0, 96) }))
       .filter((d) => d.data.some((v) => v != null));
+    // Heat pump shadow forecast with its split into base load and heat pump.
+    // A fallback entry equals the current forecast, so it draws no line.
+    const shadow = metric.key === "consumption" && detail ? this._fcShadowEntry(detail.shadow_consumption) : null;
+    if (shadow && shadow.model && Array.isArray(shadow.item.series)) {
+      const total = shadow.item.series.slice(0, 96);
+      avail.push({ key: "shadow", label: this._t("fcShadow"), color: FORECAST_COLORS.shadow, width: 2, data: total });
+      const hp = Array.isArray(shadow.item.heat_pump_series) ? shadow.item.heat_pump_series.slice(0, 96) : null;
+      if (hp && hp.some((v) => v != null)) {
+        avail.push({
+          key: "shadow_base", label: this._t("fcShadowBase"), color: FORECAST_COLORS.shadow_base, width: 1.2, dash: "1 3",
+          data: total.map((v, i) => (v == null || hp[i] == null ? null : Math.max(0, v - hp[i]))),
+        });
+        avail.push({ key: "shadow_hp", label: this._t("fcShadowHeatPump"), color: FORECAST_COLORS.shadow, width: 1.2, dash: "4 3", data: hp });
+      }
+    }
     if (!avail.length) {
       r.detPlot.innerHTML = `<div class="chart-empty dim">${this._t("noData")}</div>`;
       r.detPlot.__hv = null;
@@ -3008,6 +3090,28 @@ class MarstekVenusPanel extends HTMLElement {
         (meta.length ? ` <small class="dim">${meta.join(" · ")}</small>` : "") +
         `</span>`
       );
+    }
+    if (shadow) {
+      const item = shadow.item;
+      const made = item.captured_at ? this._t("fcCaptured", { time: this._fcStamp(item.captured_at) }) : "";
+      if (!shadow.model) {
+        parts.push(`<span><b>${this._t("fcShadow")}</b> <small class="dim">${this._fcShadowFallbackText(item)}</small></span>`);
+      } else {
+        const finished = detail.actual && !detail.actual_partial;
+        const split = item.heat_pump_kwh != null && item.shadow_kwh != null
+          ? ` (${this._t("fcShadowBase")} ${this._nf(item.shadow_kwh - item.heat_pump_kwh, 2)} + ` +
+            `${this._t("fcShadowHeatPump")} ${this._nf(item.heat_pump_kwh, 2)})`
+          : "";
+        parts.push(
+          `<span><b>${this._t("fcShadow")}</b> ${this._nf(item.shadow_kwh, 2)} kWh${split}` +
+          (finished && item.compare ? ` · ${this._t("fcError")} ${this._fcErrorText(item.compare)}` : "") +
+          (finished && item.current_compare
+            ? ` · ${this._t("fcShadowCurrent")} ${this._t("fcError")} ${this._fcErrorText(item.current_compare)}`
+            : ` · ${this._t("fcShadowCurrent")} ${this._nf(item.current_kwh, 2)} kWh`) +
+          ` <small class="dim">${[this._fcShadowMeta(item, false), made].filter(Boolean).join(" · ")}</small>` +
+          `</span>`
+        );
+      }
     }
     r.stats.innerHTML = parts.join("");
   }
@@ -8294,7 +8398,9 @@ class MarstekVenusPanel extends HTMLElement {
       .fc-row.fc-head { border-top: 0; color: var(--ink-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
       .fc-err { font-variant-numeric: tabular-nums; }
       .fc-bad { color: var(--flow-orange); }
-      @media (max-width: 720px) { .fc-row { grid-template-columns: 1fr 1fr; } }
+      .fc-row.fc-row-shadow { grid-template-columns: 1fr 0.85fr 1.25fr 1.25fr 1.65fr; }
+      .fc-sub { display: block; margin-top: 2px; font-size: 10.5px; }
+      @media (max-width: 720px) { .fc-row, .fc-row.fc-row-shadow { grid-template-columns: 1fr 1fr; } }
       .chart-empty { display: grid; place-items: center; height: 100%; min-height: 96px; font-size: 12px; }
       /* zoom: range buttons under the chart + drag-to-brush selection box */
       .chart-zoom { display: flex; gap: 4px; justify-content: flex-end; margin-top: 6px; padding-left: 48px; }

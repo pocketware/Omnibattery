@@ -305,6 +305,98 @@ class RecorderBackfillCoordinator:
             self._current_entity = None
             self._current_block = None
 
+    async def async_query_statistics(
+        self,
+        token: BackfillToken,
+        statistic_ids: set[str],
+        start: datetime,
+        end: datetime,
+        *,
+        period: str = "hour",
+        types: set[str] | None = None,
+        units: dict[str, str] | None = None,
+        block: str | None = None,
+    ) -> dict[str, list[Any]] | None:
+        """Query long-term statistics for one bounded range.
+
+        Same contract as ``async_query``: ``None`` means the token was
+        invalidated, an empty mapping is a valid (or failed, retryable) result.
+        Raw history is purged after a few days; long-term statistics are what
+        lets a model learn from a whole season.
+        """
+        if not token.is_valid():
+            return None
+        if end.timestamp() <= start.timestamp() or not statistic_ids:
+            return {}
+        try:
+            from homeassistant.components.recorder import get_instance
+            from homeassistant.components.recorder.statistics import (
+                statistics_during_period,
+            )
+        except ImportError:
+            self._last_error = "recorder statistics unavailable"
+            return {}
+
+        label = ",".join(sorted(statistic_ids))
+        self._current_entity = label[:255]
+        self._current_block = block
+        self._blocks += 1
+        self._queries += 1
+        range_s = max(0.0, end.timestamp() - start.timestamp())
+        self._last_query_range_s = range_s
+        self._max_query_range_s = max(self._max_query_range_s, range_s)
+        try:
+            recorder = get_instance(self.hass)
+            async with self._query_lock:
+                if not token.is_valid():
+                    return None
+                self._active_queries += 1
+                self._max_active_queries = max(
+                    self._max_active_queries, self._active_queries
+                )
+                try:
+                    executor_job = recorder.async_add_executor_job(
+                        statistics_during_period,
+                        self.hass,
+                        start,
+                        end,
+                        set(statistic_ids),
+                        period,
+                        units,
+                        set(types or {"mean"}),
+                    )
+                    try:
+                        result = await asyncio.shield(executor_job)
+                    except asyncio.CancelledError:
+                        try:
+                            await asyncio.shield(executor_job)
+                        except Exception:  # noqa: BLE001 - cancellation wins
+                            pass
+                        raise
+                finally:
+                    self._active_queries = max(0, self._active_queries - 1)
+            if not token.is_valid():
+                return None
+            if not isinstance(result, Mapping):
+                return {}
+            detached = {
+                str(key): list(rows or ()) for key, rows in result.items()
+            }
+            del result
+            self._states += sum(len(rows) for rows in detached.values())
+            await asyncio.sleep(0)
+            return detached if token.is_valid() else None
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - a single block is retryable
+            self._failed_blocks += 1
+            self._last_error = f"statistics: {exc}"
+            _LOGGER.debug("Recorder statistics query failed: %s", exc)
+            return {}
+        finally:
+            self._current_entity = None
+            self._current_block = None
+
     def note_skipped(self) -> None:
         """Count a complete coverage block without logging it."""
         self._skipped_blocks += 1

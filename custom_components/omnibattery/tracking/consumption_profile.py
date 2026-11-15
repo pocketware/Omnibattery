@@ -629,6 +629,11 @@ class _ProfileAggregate:
 class ConsumptionProfileTracker:
     """Capture and query the 28-day local quarter-hour profile."""
 
+    # Subclasses that learn a different load (the heat pump base load) keep
+    # their own Store and Recorder job name; the combined profile never moves.
+    STORE_KEY = PROFILE_STORE_KEY
+    BACKFILL_JOB_NAME = "consumption_profile"
+
     def __init__(
         self,
         hass: Any,
@@ -643,7 +648,7 @@ class ConsumptionProfileTracker:
         self._store: Store = Store(
             hass,
             PROFILE_STORE_VERSION,
-            f"{DOMAIN}.{config_entry.entry_id}.{PROFILE_STORE_KEY}",
+            f"{DOMAIN}.{config_entry.entry_id}.{self.STORE_KEY}",
         )
         self._days: dict[date, ProfileDay] = {}
         self._aggregate_cache: dict[tuple[int, str], _ProfileAggregate] = {}
@@ -1921,6 +1926,42 @@ class ConsumptionProfileTracker:
         # avoids repeatedly fetching days that are already useful.
         return day.valid_interval_count() < math.ceil(INTERVAL_COUNT * 0.75)
 
+    @staticmethod
+    def _backfill_external_loads(
+        config_data: dict[str, Any],
+    ) -> list[tuple[str, float]]:
+        """``(power_sensor, factor)`` for every load applied to Recorder days.
+
+        ``factor`` is negative for a load the battery skips (excluded devices
+        in the home sensor) and positive for one it covers but the home sensor
+        does not see. Subclasses append loads of their own.
+        """
+        loads: list[tuple[str, float]] = []
+        for device in config_data.get("excluded_devices", []) or []:
+            if not (
+                isinstance(device, dict)
+                and device.get("enabled", True)
+                and not device.get("ev_charger_no_telemetry", False)
+                and device.get("power_sensor")
+            ):
+                continue
+            if device.get("included_in_consumption", True):
+                try:
+                    exclusion_factor = max(
+                        0.0,
+                        min(
+                            100.0,
+                            float(device.get("exclusion_pct", 100.0)),
+                        ),
+                    ) / 100.0
+                except (TypeError, ValueError):
+                    exclusion_factor = 1.0
+                sign = -exclusion_factor
+            else:
+                sign = 1.0
+            loads.append((str(device["power_sensor"]), sign))
+        return loads
+
     def _backfill_token_valid(
         self, token: BackfillToken | None, generation: int
     ) -> bool:
@@ -1958,14 +1999,7 @@ class ConsumptionProfileTracker:
             local_tz = self._timezone()
             floor = self._retention_floor(today)
             config_data = getattr(self._config_entry, "data", {}) or {}
-            devices = [
-                device
-                for device in config_data.get("excluded_devices", []) or []
-                if isinstance(device, dict)
-                and device.get("enabled", True)
-                and not device.get("ev_charger_no_telemetry", False)
-                and device.get("power_sensor")
-            ]
+            external_loads = self._backfill_external_loads(config_data)
 
             for offset in range((today - floor).days + 1):
                 local_date = floor + timedelta(days=offset)
@@ -2011,11 +2045,10 @@ class ConsumptionProfileTracker:
                     list(home_day.coverage_s),
                     complete=local_date < today,
                 )
-                for device in devices:
+                for sensor, sign in external_loads:
                     if not self._backfill_token_valid(token, generation):
                         self._backfill_status = "cancelled"
                         return False
-                    sensor = str(device["power_sensor"])
                     device_states = await coordinator.async_query(
                         token,
                         sensor,
@@ -2034,20 +2067,6 @@ class ConsumptionProfileTracker:
                     del device_days
                     if device_day is None:
                         continue
-                    if device.get("included_in_consumption", True):
-                        try:
-                            exclusion_factor = max(
-                                0.0,
-                                min(
-                                    100.0,
-                                    float(device.get("exclusion_pct", 100.0)),
-                                ),
-                            ) / 100.0
-                        except (TypeError, ValueError):
-                            exclusion_factor = 1.0
-                        sign = -exclusion_factor
-                    else:
-                        sign = 1.0
                     _apply_external_load_to_day(adjusted, device_day, sign)
 
                 if not self._backfill_token_valid(token, generation):
@@ -2095,7 +2114,7 @@ class ConsumptionProfileTracker:
             self._last_error = "backfill: coordinator unavailable"
             return
         self._backfill_task = self._backfill_coordinator.submit(
-            "consumption_profile", self.async_backfill_from_recorder
+            self.BACKFILL_JOB_NAME, self.async_backfill_from_recorder
         )
 
     # ------------------------------------------------------------------

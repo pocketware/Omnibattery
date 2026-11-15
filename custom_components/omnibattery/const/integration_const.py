@@ -1463,3 +1463,28 @@ CONFIG_NUMBER_DEFINITIONS = [
         "condition": CONF_ENABLE_HOURLY_BALANCE,
     },
 ]
+
+# ---------------------------------------------------------------------------
+# Heat pump (shadow consumption forecast)
+# ---------------------------------------------------------------------------
+# Optional as a group: with no heat pump power sensor configured nothing below
+# is used and the integration behaves exactly as without the feature. The
+# temperature-driven forecast runs in shadow mode only — it is exposed for
+# evaluation (diagnostics, a diagnostic sensor, forecast history) and is never
+# read by the planner or any control decision.
+CONF_HEAT_PUMP_POWER_SENSORS = "heat_pump_power_sensors"
+CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR = "heat_pump_outdoor_temperature_sensor"
+CONF_HEAT_PUMP_WEATHER_ENTITY = "heat_pump_weather_entity"
+CONF_HEAT_PUMP_HEATING_ALLOWED_ENTITY = "heat_pump_heating_allowed_entity"
+CONF_HEAT_PUMP_COOLING_ALLOWED_ENTITY = "heat_pump_cooling_allowed_entity"
+CONF_HEAT_PUMP_STOP_HEATING_TEMP_ENTITY = "heat_pump_stop_heating_temperature_entity"
+CONF_HEAT_PUMP_START_COOLING_TEMP_ENTITY = "heat_pump_start_cooling_temperature_entity"
+HEAT_PUMP_CONFIG_KEYS = (
+    CONF_HEAT_PUMP_POWER_SENSORS,
+    CONF_HEAT_PUMP_OUTDOOR_TEMP_SENSOR,
+    CONF_HEAT_PUMP_WEATHER_ENTITY,
+    CONF_HEAT_PUMP_HEATING_ALLOWED_ENTITY,
+    CONF_HEAT_PUMP_COOLING_ALLOWED_ENTITY,
+    CONF_HEAT_PUMP_STOP_HEATING_TEMP_ENTITY,
+    CONF_HEAT_PUMP_START_COOLING_TEMP_ENTITY,
+)

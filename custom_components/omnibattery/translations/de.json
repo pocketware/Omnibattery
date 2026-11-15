@@ -868,7 +868,8 @@
           "temp_charge_limit": "Temperaturbasierte Ladebegrenzung",
           "capacity_protection": "Kapazitätsschutz",
           "pd_advanced": "PD-Regler (erweitert)",
-          "hourly_balance": "Stündliche Netzbalance"
+          "hourly_balance": "Stündliche Netzbalance",
+          "heat_pump": "Wärmepumpe (Prognose-Auswertung)"
         }
       },
       "sensors": {
@@ -1411,6 +1412,28 @@
           "port": "Modbus TCP port (default 502)",
           "slave_id": "Modbus slave/unit id (default 1)"
         }
+      },
+      "heat_pump": {
+        "title": "Wärmepumpe",
+        "description": "Optional. Lässt die Integration neben der Grundlast des Haushalts eine temperaturabhängige Prognose für eine Wärmepumpe lernen. Die Prognose läuft nur zur Auswertung (Schattenmodus): Sie erscheint in der Diagnose und einem Diagnosesensor und ändert keine Ladeentscheidung. Alle Felder leer lassen, um sie auszuschalten.",
+        "data": {
+          "heat_pump_power_sensors": "Leistungssensoren der Wärmepumpe",
+          "heat_pump_outdoor_temperature_sensor": "Außentemperatursensor",
+          "heat_pump_weather_entity": "Wettervorhersage-Entität (optional)",
+          "heat_pump_heating_allowed_entity": "Heizen erlaubt (optional)",
+          "heat_pump_cooling_allowed_entity": "Kühlen erlaubt (optional)",
+          "heat_pump_stop_heating_temperature_entity": "Heizgrenztemperatur (optional)",
+          "heat_pump_start_cooling_temperature_entity": "Kühlstarttemperatur (optional)"
+        },
+        "data_description": {
+          "heat_pump_power_sensors": "Ein oder mehrere Leistungssensoren (W oder kW), die zusammen die Wärmepumpe messen, z. B. Außen- und Inneneinheit. Ihre Summe wird verwendet.",
+          "heat_pump_outdoor_temperature_sensor": "Gemessene Außentemperatur. Ihre Langzeitstatistik dient zum Trainieren des Modells.",
+          "heat_pump_weather_entity": "Wetter-Entität, deren stündliche Vorhersage die erwartete Temperatur liefert. Ohne sie werden die letzten 24 Stunden gemessener Temperatur verwendet.",
+          "heat_pump_heating_allowed_entity": "Entität, die an/1 ist, solange Heizen an der Wärmepumpe freigegeben ist. Ohne sie wird der Modus aus dem Energieverbrauch abgeleitet.",
+          "heat_pump_cooling_allowed_entity": "Entität, die an/1 ist, solange Kühlen an der Wärmepumpe freigegeben ist. Ohne sie wird der Modus aus dem Energieverbrauch abgeleitet.",
+          "heat_pump_stop_heating_temperature_entity": "Zahlen-Entität mit der Außentemperatur, oberhalb derer die Wärmepumpe nicht mehr heizt. Standard 17 °C.",
+          "heat_pump_start_cooling_temperature_entity": "Zahlen-Entität mit der Außentemperatur, oberhalb derer die Wärmepumpe zu kühlen beginnt. Standard 24 °C."
+        }
       }
     },
     "error": {
@@ -1452,7 +1475,13 @@
       "discharge_below_charge": "Die Entlade-Preisuntergrenze darf nicht unter dem maximalen (Lade-)Preis liegen. Setze sie gleich oder höher oder lass sie leer, um den Ladeschwellenwert wiederzuverwenden.",
       "host_or_serial_required": "Gib entweder eine IP-Adresse (TCP) oder einen seriellen Port-Pfad (Modbus RTU) ein.",
       "missing_power_sensor": "Wähle einen Geräte-Leistungssensor oder aktiviere EV-Ladestation ohne Telemetrie und wähle einen Aktivitätssensor.",
-      "missing_activity_sensor": "Wähle für die dynamische Leistungsregelung oder eine EV-Ladestation ohne Telemetrie einen Sensor Gerät aktiv / EV-Ladestatus."
+      "missing_activity_sensor": "Wähle für die dynamische Leistungsregelung oder eine EV-Ladestation ohne Telemetrie einen Sensor Gerät aktiv / EV-Ladestatus.",
+      "heat_pump_power_required": "Mindestens einen Leistungssensor der Wärmepumpe wählen oder alle Wärmepumpenfelder leeren.",
+      "heat_pump_sensor_not_found": "Der gewählte Sensor existiert nicht.",
+      "heat_pump_power_invalid_unit": "Leistungssensoren der Wärmepumpe müssen W oder kW liefern.",
+      "heat_pump_temperature_required": "Mit einem Leistungssensor der Wärmepumpe ist ein Außentemperatursensor erforderlich.",
+      "heat_pump_temperature_invalid_unit": "Der Außentemperatursensor muss °C oder °F liefern.",
+      "heat_pump_weather_invalid": "Eine Wetter-Entität wählen."
     }
   },
   "selector": {
@@ -2456,6 +2485,9 @@
       },
       "input_limit": {
         "name": "Eingangslimit"
+      },
+      "heat_pump_shadow_forecast": {
+        "name": "Schattenprognose Verbrauch mit Wärmepumpe"
       }
     },
     "binary_sensor": {

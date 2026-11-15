@@ -868,7 +868,8 @@
           "temp_charge_limit": "Temperatuurbegrenzing laden",
           "capacity_protection": "Capaciteitsbescherming",
           "pd_advanced": "PD-regelaar (geavanceerd)",
-          "hourly_balance": "Uurlijks netsaldo"
+          "hourly_balance": "Uurlijks netsaldo",
+          "heat_pump": "Warmtepomp (evaluatie voorspelling)"
         }
       },
       "sensors": {
@@ -1411,6 +1412,28 @@
           "port": "Modbus TCP port (default 502)",
           "slave_id": "Modbus slave/unit id (default 1)"
         }
+      },
+      "heat_pump": {
+        "title": "Warmtepomp",
+        "description": "Optioneel. Laat de integratie naast de basislast van het huishouden een temperatuurafhankelijke voorspelling voor een warmtepomp leren. De voorspelling draait alleen ter evaluatie (schaduwmodus): ze verschijnt in de diagnose en een diagnostische sensor en verandert geen enkele laadbeslissing. Laat alle velden leeg om dit uit te schakelen.",
+        "data": {
+          "heat_pump_power_sensors": "Vermogenssensoren warmtepomp",
+          "heat_pump_outdoor_temperature_sensor": "Buitentemperatuursensor",
+          "heat_pump_weather_entity": "Weersverwachting-entiteit (optioneel)",
+          "heat_pump_heating_allowed_entity": "Verwarmen toegestaan (optioneel)",
+          "heat_pump_cooling_allowed_entity": "Koelen toegestaan (optioneel)",
+          "heat_pump_stop_heating_temperature_entity": "Stoptemperatuur verwarmen (optioneel)",
+          "heat_pump_start_cooling_temperature_entity": "Starttemperatuur koelen (optioneel)"
+        },
+        "data_description": {
+          "heat_pump_power_sensors": "Eén of meer vermogenssensoren (W of kW) die samen de warmtepomp meten, bijvoorbeeld een buiten- en een binnendeel. De som wordt gebruikt.",
+          "heat_pump_outdoor_temperature_sensor": "Gemeten buitentemperatuur. De langetermijnstatistieken ervan worden gebruikt om het model te trainen.",
+          "heat_pump_weather_entity": "Weer-entiteit waarvan de uurverwachting de verwachte temperatuur levert. Zonder deze entiteit worden de laatste 24 uur gemeten temperatuur gebruikt.",
+          "heat_pump_heating_allowed_entity": "Entiteit die aan/1 is zolang verwarmen op de warmtepomp is ingeschakeld. Zonder deze entiteit wordt de modus afgeleid uit het energieverbruik.",
+          "heat_pump_cooling_allowed_entity": "Entiteit die aan/1 is zolang koelen op de warmtepomp is ingeschakeld. Zonder deze entiteit wordt de modus afgeleid uit het energieverbruik.",
+          "heat_pump_stop_heating_temperature_entity": "Getal-entiteit met de buitentemperatuur waarboven de warmtepomp stopt met verwarmen. Standaard 17 °C.",
+          "heat_pump_start_cooling_temperature_entity": "Getal-entiteit met de buitentemperatuur waarboven de warmtepomp begint met koelen. Standaard 24 °C."
+        }
       }
     },
     "error": {
@@ -1452,7 +1475,13 @@
       "discharge_below_charge": "De ontlaad-prijsondergrens mag niet lager zijn dan de maximale (laad)prijsdrempel. Stel deze gelijk of hoger in, of laat leeg om de laaddrempel te hergebruiken.",
       "host_or_serial_required": "Voer een IP-adres (TCP) of een pad naar een seriële poort (Modbus RTU) in.",
       "missing_power_sensor": "Selecteer een vermogenssensor, of activeer EV-lader zonder telemetrie en selecteer een activiteitssensor.",
-      "missing_activity_sensor": "Selecteer een sensor Apparaat actief / EV-laden voor dynamische vermogensregeling of een lader zonder telemetrie."
+      "missing_activity_sensor": "Selecteer een sensor Apparaat actief / EV-laden voor dynamische vermogensregeling of een lader zonder telemetrie.",
+      "heat_pump_power_required": "Kies minstens één vermogenssensor voor de warmtepomp, of maak alle warmtepompvelden leeg.",
+      "heat_pump_sensor_not_found": "De gekozen sensor bestaat niet.",
+      "heat_pump_power_invalid_unit": "Vermogenssensoren van de warmtepomp moeten W of kW rapporteren.",
+      "heat_pump_temperature_required": "Bij een vermogenssensor voor de warmtepomp is een buitentemperatuursensor nodig.",
+      "heat_pump_temperature_invalid_unit": "De buitentemperatuursensor moet °C of °F rapporteren.",
+      "heat_pump_weather_invalid": "Kies een weer-entiteit."
     }
   },
   "selector": {
@@ -2456,6 +2485,9 @@
       },
       "input_limit": {
         "name": "Ingangslimiet"
+      },
+      "heat_pump_shadow_forecast": {
+        "name": "Schaduwvoorspelling verbruik met warmtepomp"
       }
     },
     "binary_sensor": {

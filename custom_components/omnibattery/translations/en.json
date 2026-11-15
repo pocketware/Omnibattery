@@ -839,7 +839,8 @@
           "temp_charge_limit": "Temperature charge limit",
           "capacity_protection": "Capacity protection",
           "hourly_balance": "Hourly net balance",
-          "pd_advanced": "PD controller (advanced)"
+          "pd_advanced": "PD controller (advanced)",
+          "heat_pump": "Heat pump (forecast evaluation)"
         }
       },
       "sensors": {
@@ -1403,6 +1404,28 @@
           "port": "Modbus TCP port (default 502)",
           "slave_id": "Modbus slave/unit id (default 1)"
         }
+      },
+      "heat_pump": {
+        "title": "Heat pump",
+        "description": "Optional. Lets the integration learn a temperature-dependent forecast for a heat pump next to the household base load. The forecast runs in evaluation (shadow) mode only: it is shown in diagnostics and a diagnostic sensor and does not change any charging decision. Leave every field empty to turn it off.",
+        "data": {
+          "heat_pump_power_sensors": "Heat pump power sensors",
+          "heat_pump_outdoor_temperature_sensor": "Outdoor temperature sensor",
+          "heat_pump_weather_entity": "Weather forecast entity (optional)",
+          "heat_pump_heating_allowed_entity": "Heating allowed (optional)",
+          "heat_pump_cooling_allowed_entity": "Cooling allowed (optional)",
+          "heat_pump_stop_heating_temperature_entity": "Stop heating temperature (optional)",
+          "heat_pump_start_cooling_temperature_entity": "Start cooling temperature (optional)"
+        },
+        "data_description": {
+          "heat_pump_power_sensors": "One or more power sensors (W or kW) that together measure the heat pump, for example an outdoor unit and an indoor unit. Their sum is used.",
+          "heat_pump_outdoor_temperature_sensor": "Measured outdoor temperature. Its long-term statistics are used to train the model.",
+          "heat_pump_weather_entity": "Weather entity whose hourly forecast provides the expected temperature. Without it the last 24 hours of measured temperature are used.",
+          "heat_pump_heating_allowed_entity": "Entity that is on/1 while heating is enabled on the heat pump. Without it the mode is inferred from the energy use.",
+          "heat_pump_cooling_allowed_entity": "Entity that is on/1 while cooling is enabled on the heat pump. Without it the mode is inferred from the energy use.",
+          "heat_pump_stop_heating_temperature_entity": "Number entity with the outdoor temperature above which the heat pump stops heating. Defaults to 17 °C.",
+          "heat_pump_start_cooling_temperature_entity": "Number entity with the outdoor temperature above which the heat pump starts cooling. Defaults to 24 °C."
+        }
       }
     },
     "error": {
@@ -1444,7 +1467,13 @@
       "discharge_below_charge": "The discharge price floor cannot be below the maximum (charge) price threshold. Set it equal or higher, or leave it empty to reuse the charge threshold.",
       "host_or_serial_required": "Enter either an IP address (TCP) or a serial port path (Modbus RTU).",
       "missing_power_sensor": "Select a device power sensor, or enable EV charger without power telemetry and select an activity sensor.",
-      "missing_activity_sensor": "Select an Activity / EV charging sensor for Dynamic Power Control or an EV charger without power telemetry."
+      "missing_activity_sensor": "Select an Activity / EV charging sensor for Dynamic Power Control or an EV charger without power telemetry.",
+      "heat_pump_power_required": "Select at least one heat pump power sensor, or clear all heat pump fields.",
+      "heat_pump_sensor_not_found": "The selected sensor does not exist.",
+      "heat_pump_power_invalid_unit": "Heat pump power sensors must report W or kW.",
+      "heat_pump_temperature_required": "An outdoor temperature sensor is required with a heat pump power sensor.",
+      "heat_pump_temperature_invalid_unit": "The outdoor temperature sensor must report °C or °F.",
+      "heat_pump_weather_invalid": "Select a weather entity."
     }
   },
   "selector": {
@@ -2453,6 +2482,9 @@
       },
       "input_limit": {
         "name": "Input Limit"
+      },
+      "heat_pump_shadow_forecast": {
+        "name": "Heat Pump Shadow Consumption Forecast"
       }
     },
     "binary_sensor": {

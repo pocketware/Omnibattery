@@ -868,7 +868,8 @@
           "temp_charge_limit": "Límite de carga por temperatura",
           "capacity_protection": "Protección de capacidad",
           "hourly_balance": "Balance neto horario",
-          "pd_advanced": "Controlador PD (avanzado)"
+          "pd_advanced": "Controlador PD (avanzado)",
+          "heat_pump": "Bomba de calor (evaluación de la previsión)"
         }
       },
       "sensors": {
@@ -1411,6 +1412,28 @@
           "port": "Modbus TCP port (default 502)",
           "slave_id": "Modbus slave/unit id (default 1)"
         }
+      },
+      "heat_pump": {
+        "title": "Bomba de calor",
+        "description": "Opcional. Permite que la integración aprenda una previsión dependiente de la temperatura para una bomba de calor, además de la carga base del hogar. La previsión solo se ejecuta en evaluación (modo sombra): aparece en los diagnósticos y en un sensor de diagnóstico y no cambia ninguna decisión de carga. Deja todos los campos vacíos para desactivarla.",
+        "data": {
+          "heat_pump_power_sensors": "Sensores de potencia de la bomba de calor",
+          "heat_pump_outdoor_temperature_sensor": "Sensor de temperatura exterior",
+          "heat_pump_weather_entity": "Entidad de previsión meteorológica (opcional)",
+          "heat_pump_heating_allowed_entity": "Calefacción permitida (opcional)",
+          "heat_pump_cooling_allowed_entity": "Refrigeración permitida (opcional)",
+          "heat_pump_stop_heating_temperature_entity": "Temperatura de parada de la calefacción (opcional)",
+          "heat_pump_start_cooling_temperature_entity": "Temperatura de inicio de la refrigeración (opcional)"
+        },
+        "data_description": {
+          "heat_pump_power_sensors": "Uno o más sensores de potencia (W o kW) que juntos miden la bomba de calor, por ejemplo una unidad exterior y una interior. Se usa su suma.",
+          "heat_pump_outdoor_temperature_sensor": "Temperatura exterior medida. Sus estadísticas a largo plazo se usan para entrenar el modelo.",
+          "heat_pump_weather_entity": "Entidad meteorológica cuya previsión horaria proporciona la temperatura esperada. Sin ella se usan las últimas 24 horas de temperatura medida.",
+          "heat_pump_heating_allowed_entity": "Entidad que está en on/1 mientras la calefacción está habilitada en la bomba de calor. Sin ella el modo se deduce del consumo de energía.",
+          "heat_pump_cooling_allowed_entity": "Entidad que está en on/1 mientras la refrigeración está habilitada en la bomba de calor. Sin ella el modo se deduce del consumo de energía.",
+          "heat_pump_stop_heating_temperature_entity": "Entidad numérica con la temperatura exterior por encima de la cual la bomba de calor deja de calentar. 17 °C por defecto.",
+          "heat_pump_start_cooling_temperature_entity": "Entidad numérica con la temperatura exterior por encima de la cual la bomba de calor empieza a refrigerar. 24 °C por defecto."
+        }
       }
     },
     "error": {
@@ -1452,7 +1475,13 @@
       "discharge_below_charge": "El precio mínimo de descarga no puede ser inferior al precio máximo (de carga). Ponlo igual o superior, o déjalo vacío para reutilizar el umbral de carga.",
       "host_or_serial_required": "Introduce una dirección IP (TCP) o la ruta de un puerto serie (Modbus RTU).",
       "missing_power_sensor": "Selecciona un sensor de potencia, o activa Cargador VE sin telemetría y selecciona un sensor de actividad.",
-      "missing_activity_sensor": "Selecciona un sensor de dispositivo activo / carga del VE para Control Dinámico de Potencia o un cargador sin telemetría."
+      "missing_activity_sensor": "Selecciona un sensor de dispositivo activo / carga del VE para Control Dinámico de Potencia o un cargador sin telemetría.",
+      "heat_pump_power_required": "Selecciona al menos un sensor de potencia de la bomba de calor o vacía todos los campos de la bomba de calor.",
+      "heat_pump_sensor_not_found": "El sensor seleccionado no existe.",
+      "heat_pump_power_invalid_unit": "Los sensores de potencia de la bomba de calor deben informar en W o kW.",
+      "heat_pump_temperature_required": "Se necesita un sensor de temperatura exterior con un sensor de potencia de la bomba de calor.",
+      "heat_pump_temperature_invalid_unit": "El sensor de temperatura exterior debe informar en °C o °F.",
+      "heat_pump_weather_invalid": "Selecciona una entidad meteorológica."
     }
   },
   "selector": {
@@ -2456,6 +2485,9 @@
       },
       "input_limit": {
         "name": "Límite de Entrada"
+      },
+      "heat_pump_shadow_forecast": {
+        "name": "Previsión sombra de consumo con bomba de calor"
       }
     },
     "binary_sensor": {

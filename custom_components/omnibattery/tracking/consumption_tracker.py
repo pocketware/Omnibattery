@@ -38,7 +38,15 @@ from .consumption_profile import (
     ConsumptionForecast,
     ConsumptionProfileTracker,
     INTERVAL_COUNT,
+    INTERVAL_SECONDS,
     MAX_SAMPLE_GAP_SECONDS,
+    _interval_index,
+    _local_segments,
+)
+from .heat_pump_profile import (
+    BaseLoadProfileTracker,
+    HeatPumpProfileTracker,
+    heat_pump_power_sensors,
 )
 from .solar_profile import SolarProfileTracker
 
@@ -65,6 +73,11 @@ VACATION_RETENTION_DAYS = 35
 # daily energy totals.
 HOME_CONSUMPTION_HOLD_S = 15.0
 HOME_CONSUMPTION_MIN_BALANCE_W = 20.0
+
+# The heat pump shadow forecast is recorded into the forecast history at most
+# this often; it is evaluation data and never feeds a decision.
+HEAT_PUMP_SHADOW_RECORD_S = 15 * 60
+SHADOW_SOURCE = "heat_pump_model"
 
 
 def coordinator_ac_power_w(coordinator: Any) -> float | None:
@@ -197,6 +210,28 @@ class ConsumptionTracker:
         self._consumption_profile.set_backfill_coordinator(self._backfill_coordinator)
         self._solar_profile.set_backfill_coordinator(self._backfill_coordinator)
 
+        # Heat pump shadow forecast: only built when a heat pump power sensor
+        # is configured, so an entry without one runs exactly as before. Both
+        # objects learn and are evaluated; nothing in the planner or control
+        # path reads them (shadow mode).
+        self._heat_pump: HeatPumpProfileTracker | None = None
+        self._base_profile: BaseLoadProfileTracker | None = None
+        if heat_pump_power_sensors(getattr(config_entry, "data", {}) or {}):
+            self._heat_pump = HeatPumpProfileTracker(hass, config_entry, controller)
+            self._base_profile = BaseLoadProfileTracker(
+                hass,
+                config_entry,
+                controller,
+                fallback_daily_kwh=self.get_avg_daily_consumption,
+            )
+            self._heat_pump.set_backfill_coordinator(self._backfill_coordinator)
+            self._base_profile.set_backfill_coordinator(self._backfill_coordinator)
+        self.heat_pump_profile = self._heat_pump
+        self.base_consumption_profile = self._base_profile
+        self._heat_pump_shadow_last_record_mono: float | None = None
+        self._heat_pump_shadow_task: asyncio.Task | None = None
+        self._heat_pump_last_error: str | None = None
+
         # Transient state (not exposed to sensors)
         self._household_last_accumulation_time: Optional[float] = None
         self._daily_solar_last_time: Optional[float] = None
@@ -221,6 +256,39 @@ class ConsumptionTracker:
     async def load_consumption_profile(self) -> bool:
         """Restore the independent quarter-hour profile Store."""
         return await self._consumption_profile.async_load()
+
+    async def load_heat_pump(self) -> bool:
+        """Restore the heat pump model and base-load profile Stores.
+
+        A no-op without a configured heat pump. Failures stay inside the
+        trackers, so setup never depends on them.
+        """
+        if (
+            getattr(self, "_heat_pump", None) is None
+            or getattr(self, "_base_profile", None) is None
+        ):
+            return False
+        try:
+            await self._base_profile.async_load()
+            self._sync_profile_vacation_exclusions()
+            return await self._heat_pump.async_load()
+        except Exception as exc:  # noqa: BLE001 - learning is best effort
+            self._heat_pump_last_error = f"load: {exc}"
+            _LOGGER.warning("Heat pump forecast: could not restore state: %s", exc)
+            return False
+
+    def start_heat_pump_backfill(self) -> None:
+        """Queue the base-load Recorder backfill and the statistics backfill."""
+        if (
+            getattr(self, "_heat_pump", None) is None
+            or getattr(self, "_base_profile", None) is None
+        ):
+            return
+        try:
+            self._base_profile.start_backfill(self._backfill_coordinator)
+            self._heat_pump.start_backfill(self._backfill_coordinator)
+        except Exception as exc:  # noqa: BLE001
+            self._heat_pump_last_error = f"backfill: {exc}"
 
     async def load_vacation_state(self) -> None:
         """Restore exclusion periods and valid overnight baseline observations."""
@@ -360,6 +428,9 @@ class ConsumptionTracker:
         setter = getattr(self._consumption_profile, "set_excluded_periods", None)
         if callable(setter):
             setter(self._vacation_periods)
+        base_profile = getattr(self, "_base_profile", None)
+        if base_profile is not None:
+            base_profile.set_excluded_periods(self._vacation_periods)
 
     def is_vacation_active(self) -> bool:
         return bool(getattr(self._controller, "vacation_mode_enabled", False))
@@ -502,6 +573,254 @@ class ConsumptionTracker:
         midnight = datetime.combine(target_date, time.min, tzinfo=now.tzinfo)
         return self.forecast_consumption_between(midnight, midnight + timedelta(days=1), fallback=fallback)
 
+    # ------------------------------------------------------------------
+    # Heat pump shadow forecast (evaluation only; never read by control)
+    # ------------------------------------------------------------------
+
+    def forecast_consumption_with_heat_pump_between(
+        self, start: datetime, end: datetime, *, fallback: str = "legacy_daily"
+    ) -> ConsumptionForecast:
+        """Shadow forecast: base-load profile plus the temperature model.
+
+        Returns the same ``ConsumptionForecast`` shape as
+        ``forecast_consumption_between``. Whenever the heat pump model or the
+        base-load profile is not mature, the result *is* the current combined
+        forecast, unchanged. Nothing in the planner, Charge Delay, the pricing
+        engine or any control path calls this.
+        """
+        forecast, _details = self.heat_pump_shadow_forecast_between(
+            start, end, fallback=fallback
+        )
+        return forecast
+
+    def heat_pump_shadow_forecast_between(
+        self, start: datetime, end: datetime, *, fallback: str = "legacy_daily"
+    ) -> tuple[ConsumptionForecast, dict[str, Any]]:
+        """The shadow forecast and the evidence behind it."""
+        current = self.forecast_consumption_between(start, end, fallback=fallback)
+        details: dict[str, Any] = {
+            "current_kwh": round(current.energy_kwh, 3),
+            "current_source": current.source,
+            "fallback_reason": None,
+            # Same quarters as the shadow series, so both can be compared
+            # with the measured day over the same window.
+            "current_intervals_kwh": [
+                round(value, 4) for value in current.intervals_kwh
+            ],
+        }
+
+        def fall_back(reason: str) -> tuple[ConsumptionForecast, dict[str, Any]]:
+            details["fallback_reason"] = reason
+            details["source"] = current.source
+            details["shadow_kwh"] = round(current.energy_kwh, 3)
+            return current, details
+
+        heat_pump = getattr(self, "_heat_pump", None)
+        base_profile = getattr(self, "_base_profile", None)
+        if heat_pump is None or base_profile is None:
+            return fall_back("heat_pump_not_configured")
+        if self.is_vacation_active():
+            return fall_back("vacation")
+        try:
+            base = base_profile.forecast_energy_between(
+                start, end, exclude_charging_windows=False, fallback=fallback
+            )
+            details["base_kwh"] = round(base.energy_kwh, 3)
+            details["base_source"] = base.source
+            details["base_level_factor"] = round(base.level_factor, 3)
+            if not base.mature or base.source != "profile":
+                return fall_back(
+                    f"base_profile_immature:{base.fallback_reason or base.source}"
+                )
+            tz = base_profile._timezone()
+            start_local = start.astimezone(tz) if start.tzinfo else start.replace(tzinfo=tz)
+            end_local = end.astimezone(tz) if end.tzinfo else end.replace(tzinfo=tz)
+            now = heat_pump._now()
+            day_forecasts: dict[date, Any] = {}
+            aggregate = [0.0] * INTERVAL_COUNT
+            heat_pump_energy = 0.0
+            for segment_start, segment_end, midpoint in _local_segments(
+                start_local, end_local
+            ):
+                local_date = midpoint.date()
+                day = day_forecasts.get(local_date)
+                if day is None:
+                    day = heat_pump.forecast_day(local_date, now)
+                    day_forecasts[local_date] = day
+                if not day.mature:
+                    details["days"] = {
+                        key.isoformat(): value.as_dict()
+                        for key, value in day_forecasts.items()
+                    }
+                    return fall_back(day.reason or "heat_pump_model_immature")
+                index = _interval_index(midpoint.timetz().replace(tzinfo=None))
+                portion = day.intervals_kwh[index] * (
+                    (segment_end - segment_start) / INTERVAL_SECONDS
+                )
+                heat_pump_energy += portion
+                aggregate[index] += portion
+        except Exception as exc:  # noqa: BLE001 - evaluation must never raise
+            self._heat_pump_last_error = f"shadow: {exc}"
+            _LOGGER.debug("Heat pump shadow forecast failed", exc_info=True)
+            return fall_back(f"error:{type(exc).__name__}")
+
+        intervals = [
+            base_value + heat_pump_value
+            for base_value, heat_pump_value in zip(base.intervals_kwh, aggregate)
+        ]
+        by_date = {
+            local_date: [
+                base_value + heat_pump_value
+                for base_value, heat_pump_value in zip(
+                    values,
+                    day_forecasts[local_date].intervals_kwh
+                    if local_date in day_forecasts
+                    else [0.0] * INTERVAL_COUNT,
+                )
+            ]
+            for local_date, values in base.intervals_by_date.items()
+        }
+        shadow = ConsumptionForecast(
+            energy_kwh=base.energy_kwh + heat_pump_energy,
+            intervals_kwh=intervals,
+            source=SHADOW_SOURCE,
+            mature=True,
+            coverage_ratio=base.coverage_ratio,
+            weekday_samples=base.weekday_samples,
+            total_days=base.total_days,
+            fallback_reason=None,
+            day_type_samples=base.day_type_samples,
+            profile_age_days=base.profile_age_days,
+            newest_profile_date=base.newest_profile_date,
+            intervals_by_date=by_date,
+            level_factor=base.level_factor,
+        )
+        details.update(
+            {
+                "source": SHADOW_SOURCE,
+                "shadow_kwh": round(shadow.energy_kwh, 3),
+                "heat_pump_kwh": round(heat_pump_energy, 3),
+                "heat_pump_intervals_kwh": [round(value, 4) for value in aggregate],
+                "days": {
+                    key.isoformat(): value.as_dict()
+                    for key, value in day_forecasts.items()
+                },
+            }
+        )
+        return shadow, details
+
+    def heat_pump_shadow_summary(self, now: datetime | None = None) -> dict[str, Any]:
+        """Today's and tomorrow's shadow forecast next to the current one."""
+        if getattr(self, "_heat_pump", None) is None:
+            return {"configured": False}
+        now = now or dt_util.now()
+        summary: dict[str, Any] = {"configured": True}
+        for label, offset in (("today", 0), ("tomorrow", 1)):
+            target = now.date() + timedelta(days=offset)
+            midnight = datetime.combine(target, time.min, tzinfo=now.tzinfo)
+            try:
+                forecast, details = self.heat_pump_shadow_forecast_between(
+                    midnight, midnight + timedelta(days=1)
+                )
+                details["date"] = target.isoformat()
+                details["intervals_kwh"] = [
+                    round(value, 4) for value in forecast.intervals_kwh
+                ]
+                summary[label] = details
+            except Exception as exc:  # noqa: BLE001
+                summary[label] = {"date": target.isoformat(), "error": str(exc)}
+        return summary
+
+    def heat_pump_diagnostics(self) -> dict[str, Any]:
+        """Diagnostics for the heat pump model, the base load and the shadow."""
+        if (
+            getattr(self, "_heat_pump", None) is None
+            or getattr(self, "_base_profile", None) is None
+        ):
+            return {"configured": False}
+        result: dict[str, Any] = {"configured": True, "mode": "shadow"}
+        try:
+            result["model"] = self._heat_pump.diagnostics()
+        except Exception as exc:  # noqa: BLE001
+            result["model"] = {"error": str(exc)}
+        try:
+            result["base_profile"] = self._base_profile.diagnostics()
+        except Exception as exc:  # noqa: BLE001
+            result["base_profile"] = {"error": str(exc)}
+        summary = self.heat_pump_shadow_summary()
+        for label in ("today", "tomorrow"):
+            item = summary.get(label)
+            if isinstance(item, dict):
+                item = {
+                    key: value
+                    for key, value in item.items()
+                    if not key.endswith("intervals_kwh")
+                }
+            result[f"shadow_{label}"] = item
+        result["last_error"] = self._heat_pump_last_error
+        return result
+
+    def _record_heat_pump_samples(
+        self, power_kw: float | None, local_time: datetime, monotonic_time: float
+    ) -> None:
+        """Feed the heat pump capture and the base-load profile; never raise."""
+        heat_pump = getattr(self, "_heat_pump", None)
+        base_profile = getattr(self, "_base_profile", None)
+        if heat_pump is None or base_profile is None:
+            return
+        try:
+            heat_pump_kw = heat_pump.record_sample(
+                local_time=local_time, monotonic_time=monotonic_time
+            )
+            base_kw = (
+                max(0.0, power_kw - heat_pump_kw)
+                if power_kw is not None and heat_pump_kw is not None
+                else None
+            )
+            base_profile.record_power_sample(
+                base_kw, local_time=local_time, monotonic_time=monotonic_time
+            )
+            heat_pump.maybe_refresh(monotonic_time=monotonic_time)
+            self._maybe_record_heat_pump_shadow(monotonic_time)
+        except Exception as exc:  # noqa: BLE001 - learning never gates control
+            self._heat_pump_last_error = f"capture: {exc}"
+            _LOGGER.debug("Heat pump capture failed", exc_info=True)
+
+    def _maybe_record_heat_pump_shadow(self, monotonic_time: float) -> None:
+        """Queue a throttled forecast-history record of the shadow forecast."""
+        last = getattr(self, "_heat_pump_shadow_last_record_mono", None)
+        if last is not None and monotonic_time - last < HEAT_PUMP_SHADOW_RECORD_S:
+            return
+        task = getattr(self, "_heat_pump_shadow_task", None)
+        if task is not None and not task.done():
+            return
+        history = getattr(self._controller, "_forecast_history", None)
+        recorder = getattr(history, "record_shadow_consumption", None)
+        if not callable(recorder):
+            return
+        self._heat_pump_shadow_last_record_mono = monotonic_time
+        self._heat_pump_shadow_task = self._create_background_task(
+            self._async_record_heat_pump_shadow(recorder),
+            "omnibattery_heat_pump_shadow_history",
+        )
+
+    async def _async_record_heat_pump_shadow(self, recorder: Any) -> None:
+        try:
+            now = dt_util.now()
+            summary = self.heat_pump_shadow_summary(now)
+            for label, offset in (("today", 0), ("tomorrow", 1)):
+                item = summary.get(label)
+                if not isinstance(item, dict) or "error" in item:
+                    continue
+                recorder(
+                    now.date() + timedelta(days=offset),
+                    shadow=item,
+                    captured_at=now,
+                )
+        except Exception as exc:  # noqa: BLE001
+            self._heat_pump_last_error = f"history: {exc}"
+            _LOGGER.debug("Heat pump shadow history failed", exc_info=True)
+
     def start_consumption_profile_backfill(self) -> None:
         """Start the non-blocking Recorder backfill for the quarter-hour profile."""
         self._consumption_profile.start_backfill(self._backfill_coordinator)
@@ -533,6 +852,15 @@ class ConsumptionTracker:
         """Invalidate Recorder work before a config-entry unload starts I/O."""
         self._consumption_profile.cancel_backfill()
         self._solar_profile.cancel_backfill()
+        base_profile = getattr(self, "_base_profile", None)
+        if base_profile is not None:
+            base_profile.cancel_backfill()
+        heat_pump = getattr(self, "_heat_pump", None)
+        if heat_pump is not None:
+            try:
+                await heat_pump.async_stop()
+            except Exception as exc:  # noqa: BLE001
+                _LOGGER.debug("Heat pump stop failed: %s", exc)
         await self._backfill_coordinator.async_cancel()
         self._legacy_backfill_task = None
         current = asyncio.current_task()
@@ -2022,12 +2350,14 @@ class ConsumptionTracker:
             self._consumption_profile.record_power_sample(
                 power_kw, local_time=profile_now, monotonic_time=profile_mono
             )
+            self._record_heat_pump_samples(power_kw, profile_now, profile_mono)
             return
         self._consumption_profile.record_power_sample(
             power_kw,
             local_time=profile_now,
             monotonic_time=profile_mono,
         )
+        self._record_heat_pump_samples(power_kw, profile_now, profile_mono)
 
         if power_kw is None:
             # Break continuity like every other integrator here: leaving the
@@ -2103,6 +2433,9 @@ class ConsumptionTracker:
             self.save_accumulators()
             self.save_daily_energy()
             self._consumption_profile.request_save()
+            base_profile = getattr(self, "_base_profile", None)
+            if base_profile is not None:
+                base_profile.request_save()
 
     async def maybe_save_grid_at_min_soc_history(self) -> None:
         """Persist consumption history every ~5 min during grid-at-min-soc accumulation.
@@ -2132,4 +2465,10 @@ class ConsumptionTracker:
         await self.async_save_daily_energy()
         await self._consumption_profile.async_save_all()
         await self._solar_profile.async_save_all()
+        base_profile = getattr(self, "_base_profile", None)
+        if base_profile is not None:
+            await base_profile.async_save_all()
+        heat_pump = getattr(self, "_heat_pump", None)
+        if heat_pump is not None:
+            await heat_pump.async_save_all()
         await self._flush_vacation_state()
