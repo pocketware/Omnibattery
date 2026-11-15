@@ -19,6 +19,10 @@ ENERGY_TOLERANCE_KWH = 0.05
 _EPSILON = 1e-9
 # A plan within this of the room counts as filling it (allocation rounding).
 _ROOM_BOUND_TOLERANCE_KWH = 0.01
+# Least a held slot keeps when the grid carries its whole load: enough to be
+# entered and counted as booked (the projection's hold skips 0.01 kWh), so
+# the battery still holds through it.
+_SLOT_HOLD_MIN_KWH = 0.02
 # value_cap of a deadline past the last published price.
 _UNPRICED = -math.inf
 
@@ -233,6 +237,10 @@ class ChronologicalEvaluationRequest:
     # grid carries while a slot charges only cancels the need beyond it.
     # None keeps the plain trim (the need is the total).
     uncapped_required_kwh: float | None = None
+    # Dynamic Pricing keeps the battery idle for the rest of a booked slot
+    # once it stored its amount, so the grid carries the whole slot's load.
+    # Only with ``grid_carries_load_while_charging``.
+    battery_holds_rest_of_slot: bool = False
     # Grid import ceiling (kW) the controller regulates to while a slot
     # charges. The house load comes out of it, so a slot stores at most
     # ``min(power, ceiling - net load)``. None keeps the flat ``power``.
@@ -518,6 +526,27 @@ def _without_load_left_to_grid(
     ]
 
 
+def _load_in_window(
+    intervals: Sequence[EnergyInterval], start: datetime, end: datetime
+) -> float:
+    """House load solar does not cover between ``start`` and ``end``."""
+    load = 0.0
+    for interval in intervals:
+        if interval.end <= start:
+            continue
+        if interval.start >= end:
+            break
+        interval_hours = _duration_hours(interval.start, interval.end)
+        if interval_hours <= 0.0:
+            continue
+        load += (
+            max(0.0, interval.consumption_kwh - interval.solar_kwh)
+            / interval_hours
+            * _duration_hours(max(start, interval.start), min(end, interval.end))
+        )
+    return load
+
+
 def _load_carried_while_storing(
     intervals: Sequence[EnergyInterval],
     stored_kwh: float,
@@ -694,6 +723,7 @@ def allocate_price_slots(
     grid_carries_load_while_charging: bool = False,
     grid_ceiling_kw: float | None = None,
     uncapped_required_kwh: float | None = None,
+    battery_holds_rest_of_slot: bool = False,
 ) -> ChronologicalPlan:
     """Allocate the cheapest feasible slot capacity to energy deadlines.
 
@@ -1463,6 +1493,17 @@ def allocate_price_slots(
                     drained, amount + cover, start, end, power * efficiency
                 ),
             )
+            if battery_holds_rest_of_slot:
+                # Dynamic Pricing holds the battery for the rest of a slot
+                # once it stored its amount (dp_slot_hold), so the grid
+                # carries the whole slot's load, not only the minutes it
+                # charges. Leaving the rest to the battery's drain booked
+                # each slot that much too large (15 Nov 2026). A small amount
+                # stays so the slot is still entered and the hold applies.
+                net = max(
+                    min(net, _SLOT_HOLD_MIN_KWH),
+                    min(net, amount + cover - _load_in_window(drained, start, end)),
+                )
             if (
                 beyond_room > _EPSILON
                 and amount - net > _EPSILON
@@ -1596,6 +1637,7 @@ def evaluate_chronological_request(
         grid_carries_load_while_charging=request.grid_carries_load_while_charging,
         grid_ceiling_kw=request.grid_ceiling_kw,
         uncapped_required_kwh=request.uncapped_required_kwh,
+        battery_holds_rest_of_slot=request.battery_holds_rest_of_slot,
     )
     return ChronologicalEvaluationResult(
         plan=plan,

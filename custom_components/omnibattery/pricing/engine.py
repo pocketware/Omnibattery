@@ -4027,6 +4027,12 @@ class PricingManager:
                     uncapped_required_kwh=max(
                         0.0, uncapped_required - (window_load_on_grid or 0.0)
                     ),
+                    # A Dynamic Pricing slot holds the battery once it stored
+                    # its amount (apply_dynamic_slot_hold).
+                    battery_holds_rest_of_slot=(
+                        getattr(self._controller, "predictive_charging_mode", None)
+                        == PREDICTIVE_MODE_DYNAMIC_PRICING
+                    ),
                 )
             )
             plan = evaluation.plan
